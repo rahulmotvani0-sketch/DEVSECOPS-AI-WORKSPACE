@@ -1,0 +1,28 @@
+[package]
+name = "airlock-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Command-line companion for Airlock DevSecOps Operations Cockpit"
+
+[dependencies]
+airlock-core = { path = "../airlock-core" }
+airlock-k8s = { path = "../airlock-k8s" }
+airlock-prom = { path = "../airlock-prom" }
+airlock-pty = { path = "../airlock-pty" }
+airlock-ai = { path = "../airlock-ai" }
+clap.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+
+[[bin]]
+name = "airlock"
+path = "src/main.rs"
+
+[lib]
+name = "airlock_api"
+path = "src/lib.rs"
