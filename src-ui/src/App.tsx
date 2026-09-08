@@ -28,6 +28,36 @@ import {
   InlineAIPromptState,
 } from './types';
 
+const FALLBACK_DIAGNOSTIC: DiagnosticResult = {
+  service_name: 'checkout-api',
+  status: 'degraded',
+  symptoms: [
+    'Pod restarts: 5 in the last 3 hours (CrashLoopBackOff)',
+    'Memory working set: 256.0 MiB (100% of limits.memory ceiling)',
+    'P95 latency: 840ms (violating 200ms SLO threshold)',
+    'Kernel OOMKiller event: container terminated with exit code 137',
+  ],
+  timeline: [
+    { timestamp: '09:12:00', source: 'Git', description: "Commit 4a8f91c merged: 'Update batch payload size to 5000'", is_key_event: false },
+    { timestamp: '09:14:30', source: 'Kubernetes', description: 'Deployment rollout checkout-api:v1.4.2 complete', is_key_event: false },
+    { timestamp: '09:18:15', source: 'Prometheus', description: 'Memory working set saturated at 256.0 MiB ceiling', is_key_event: true },
+    { timestamp: '09:20:02', source: 'Kubernetes', description: 'Pod OOMKilled by node cgroup killer (exit code 137)', is_key_event: true },
+    { timestamp: '09:21:40', source: 'Prometheus', description: 'P95 HTTP latency spiked from 45ms to 840ms', is_key_event: false },
+  ],
+  root_cause_candidates: [
+    {
+      title: 'Memory limit exhaustion under batch payload processing',
+      explanation: 'Container memory limit (256Mi) reached under batch payload stream processing; Linux cgroup OOMKiller terminating node runtime process.',
+      probability: 0,
+    },
+  ],
+  confidence_score: 0,
+  recommendation: 'Increase deployment memory limit to 512Mi and upgrade runtime base image to resolve stream buffer allocation memory leak.',
+  action_command: `kubectl -n default patch deployment checkout-api --patch '{"spec":{"template":{"spec":{"containers":[{"name":"checkout-api","resources":{"limits":{"memory":"512Mi"}}}]}}}}'`,
+  status_state: 'not_executed',
+  ai_model_used: 'qwen2.5-coder (Local)',
+};
+
 const INITIAL_MANIFEST: ManifestFile = {
   id: 'file-checkout-api',
   name: 'checkout-api.yaml',
@@ -144,30 +174,18 @@ export const App: React.FC = () => {
     },
   ]);
 
-  // AI Diagnostic State
-  const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>({
-    serviceName: 'checkout-api',
-    status: 'Degraded',
-    symptoms: [
-      'Pod restarts: 5 in the last 3 hours (CrashLoopBackOff)',
-      'Memory working set: 256.0 MiB (100% of limits.memory ceiling)',
-      'P95 latency: 840ms (violating 200ms SLO threshold)',
-      'Kernel OOMKiller event: container terminated with exit code 137',
-    ],
-    timeline: [
-      { timestamp: '09:12:00', source: 'Git', description: "Commit 4a8f91c merged: 'Update batch payload size to 5000'" },
-      { timestamp: '09:14:30', source: 'Kubernetes', description: 'Deployment rollout checkout-api:v1.4.2 complete' },
-      { timestamp: '09:18:15', source: 'Prometheus', description: 'Memory working set saturated at 256.0 MiB ceiling' },
-      { timestamp: '09:20:02', source: 'Kubernetes', description: 'Pod OOMKilled by node cgroup killer (exit code 137)' },
-      { timestamp: '09:21:40', source: 'Prometheus', description: 'P95 HTTP latency spiked from 45ms to 840ms' },
-    ],
-    rootCause: 'Container memory limit (256Mi) reached under batch payload stream processing; Linux cgroup OOMKiller terminating node runtime process.',
-    confidence: 91,
-    recommendation: 'Increase deployment memory limit to 512Mi and upgrade runtime base image to resolve stream buffer allocation memory leak.',
-    actionCommand: `kubectl -n default patch deployment checkout-api --patch '{"spec":{"template":{"spec":{"containers":[{"name":"checkout-api","resources":{"limits":{"memory":"512Mi"}}}]}}}}'`,
-    executionStatus: 'NOT EXECUTED',
-    aiModelUsed: 'qwen2.5-coder (Local)',
-  });
+  // AI Diagnostic State — fetched from backend, fallback on error
+  const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
+
+  useEffect(() => {
+    invoke<DiagnosticResult>('analyze_service_why', {
+      targetService: 'checkout-api',
+      env: currentEnv,
+      mode: aiMode,
+    })
+      .then(setDiagnostic)
+      .catch(() => setDiagnostic(FALLBACK_DIAGNOSTIC));
+  }, [currentEnv, aiMode]);
 
   // Global Keyboard Shortcuts
   useEffect(() => {
@@ -206,7 +224,7 @@ export const App: React.FC = () => {
   const handleExecutePatch = async () => {
     setExecuteError(null);
     const token = 'EXPLICIT_HUMAN_APPROVED_V1';
-    const patchCmd = diagnostic?.actionCommand || 'kubectl -n default patch deployment checkout-api';
+    const patchCmd = diagnostic?.action_command || 'kubectl -n default patch deployment checkout-api';
 
     try {
       await invoke('execute_action', {
@@ -231,8 +249,8 @@ export const App: React.FC = () => {
     if (diagnostic) {
       setDiagnostic({
         ...diagnostic,
-        status: 'Healthy',
-        executionStatus: 'APPROVED & EXECUTED',
+        status: 'healthy',
+        status_state: 'approved_and_executed',
       });
     }
   };
@@ -384,6 +402,8 @@ export const App: React.FC = () => {
         {/* Right DevSecOps Copilot Drawer */}
         <DevSecOpsCopilotPanel
           isOpen={isCopilotOpen}
+          env={currentEnv}
+          aiMode={aiMode}
           onClose={() => setIsCopilotOpen(false)}
           onOpenSettings={() => setIsAIGatewayOpen(true)}
           onExecuteCommand={handleExecutePatch}
@@ -420,7 +440,7 @@ export const App: React.FC = () => {
         isOpen={isComposerOpen}
         onClose={() => setIsComposerOpen(false)}
         onExecutePatch={handleExecutePatch}
-        isExecuted={diagnostic?.executionStatus === 'APPROVED & EXECUTED'}
+        isExecuted={diagnostic?.status_state === 'approved_and_executed'}
       />
 
       {/* 7. Universal Command Palette (Ctrl+P) */}

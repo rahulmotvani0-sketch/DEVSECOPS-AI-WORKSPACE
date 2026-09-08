@@ -139,7 +139,7 @@ export const DevSecOpsOverviewView: React.FC<DevSecOpsOverviewViewProps> = ({
             {isPatched ? '0' : '1 P1'}
           </div>
           <div style={{ fontSize: '11px', color: isPatched ? '#8091a7' : '#fca5a5', marginTop: '3px' }}>
-            {isPatched ? 'Incident resolved & verified' : (diagnostic?.serviceName ? `${diagnostic.serviceName}: OOMKilled` : 'checkout-api: OOMKilled')}
+            {isPatched ? 'Incident resolved & verified' : (diagnostic?.service_name ? `${diagnostic.service_name}: OOMKilled` : 'checkout-api: OOMKilled')}
           </div>
         </div>
 

@@ -466,12 +466,12 @@ export const CursorAIChatPanel: React.FC<CursorAIChatPanelProps> = ({
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
                       <ShieldCheck size={14} color="#10b981" />
-                      <span style={{ color: diagnostic.executionStatus === 'APPROVED & EXECUTED' ? '#34d399' : '#f59e0b', fontWeight: 600 }}>
-                        {diagnostic.executionStatus === 'APPROVED & EXECUTED' ? '✓ EXECUTED & AUDITED' : 'Human Approval Required'}
+                      <span style={{ color: diagnostic.status_state === 'approved_and_executed' ? '#34d399' : '#f59e0b', fontWeight: 600 }}>
+                        {diagnostic.status_state === 'approved_and_executed' ? '✓ EXECUTED & AUDITED' : 'Human Approval Required'}
                       </span>
                     </div>
 
-                    {diagnostic.executionStatus !== 'APPROVED & EXECUTED' && (
+                    {diagnostic.status_state !== 'approved_and_executed' && (
                       <button
                         onClick={onExecutePatch}
                         style={{

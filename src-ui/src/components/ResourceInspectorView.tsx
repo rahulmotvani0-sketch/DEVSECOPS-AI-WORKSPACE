@@ -334,7 +334,7 @@ export const ResourceInspectorView: React.FC<ResourceInspectorViewProps> = ({
                   <AlertTriangle size={18} color="#ef4444" />
                   <div>
                     <strong style={{ color: '#f87171', fontSize: '13px' }}>
-                      {diagnostic ? `Active Incident: ${diagnostic.rootCause}` : 'Active OOMKill Incident Detected'}
+                      {diagnostic?.root_cause_candidates?.[0] ? `Active Incident: ${diagnostic.root_cause_candidates[0].title}` : 'Active OOMKill Incident Detected'}
                     </strong>
                     <div style={{ color: '#c9d1d9', fontSize: '11.5px', marginTop: '2px' }}>
                       Memory ceiling reached 256.0 MiB (100% saturation). Container terminated by node cgroup killer (exit code 137).

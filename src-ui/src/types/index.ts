@@ -11,17 +11,30 @@ export interface ResourceNode {
   level?: number;
 }
 
+export interface RootCauseCandidate {
+  title: string;
+  explanation: string;
+  probability: number;
+}
+
+export interface DiagnosticTimelineEvent {
+  timestamp: string;
+  source: string;
+  description: string;
+  is_key_event: boolean;
+}
+
 export interface DiagnosticResult {
-  serviceName: string;
+  service_name: string;
   status: string;
   symptoms: string[];
-  timeline: { timestamp: string; source: string; description: string }[];
-  rootCause: string;
-  confidence: number;
+  timeline: DiagnosticTimelineEvent[];
+  root_cause_candidates: RootCauseCandidate[];
+  confidence_score: number;
   recommendation: string;
-  actionCommand: string;
-  executionStatus: 'NOT EXECUTED' | 'APPROVED & EXECUTED' | 'REJECTED';
-  aiModelUsed: string;
+  action_command: string;
+  status_state: string;
+  ai_model_used: string;
 }
 
 export interface TabItem {

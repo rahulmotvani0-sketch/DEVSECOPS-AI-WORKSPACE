@@ -168,7 +168,7 @@ export const AIGuidePanel: React.FC<AIGuidePanelProps> = ({
                   fontSize: '11px',
                 }}
               >
-                {diagnostic.confidence}% Confidence
+                Evidence-linked analysis
               </span>
             </div>
 
@@ -203,7 +203,7 @@ export const AIGuidePanel: React.FC<AIGuidePanelProps> = ({
                 Root Cause:
               </div>
               <div style={{ fontSize: '11.5px', color: '#f0f6fc', lineHeight: '1.4' }}>
-                {diagnostic.rootCause}
+                {diagnostic.root_cause_candidates?.[0]?.explanation || diagnostic.recommendation}
               </div>
             </div>
 
@@ -226,7 +226,7 @@ export const AIGuidePanel: React.FC<AIGuidePanelProps> = ({
                   whiteSpace: 'pre-wrap',
                 }}
               >
-                {diagnostic.actionCommand}
+                {diagnostic.action_command}
               </pre>
             </div>
 

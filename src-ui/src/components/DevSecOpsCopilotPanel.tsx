@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
 import {
   Sparkles,
   CheckCircle2,
@@ -8,9 +9,12 @@ import {
   Activity,
   Cpu
 } from 'lucide-react';
+import { DiagnosticResult, EnvironmentTier, AIMode } from '../types';
 
 interface DevSecOpsCopilotPanelProps {
   isOpen: boolean;
+  env: EnvironmentTier;
+  aiMode: AIMode;
   onClose?: () => void;
   onOpenSettings?: () => void;
   onExecuteCommand?: (command: string) => void;
@@ -22,7 +26,6 @@ interface StructuredInvestigation {
   timestamp: string;
   stepsCompleted: string[];
   likelyRootCause: string;
-  confidence: number;
   evidence: string[];
   recommendedAction: string;
   proposedCommand: string;
@@ -30,54 +33,56 @@ interface StructuredInvestigation {
   status: 'PROPOSED' | 'APPROVED' | 'REJECTED';
 }
 
+function extractService(query: string): string {
+  const match = query.match(/\b(checkout-api|payment-api|auth-service|orders-db)\b/i);
+  return match ? match[1] : 'checkout-api';
+}
+
 export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
   isOpen,
+  env,
+  aiMode,
   onClose,
   onOpenSettings,
   onExecuteCommand
 }) => {
   const [inputVal, setInputVal] = useState('');
-  const [selectedModel] = useState('Claude 3.5 Sonnet (Smart Route)');
+  const [selectedModel] = useState('qwen2.5-coder (Local)');
   const [isInvestigating, setIsInvestigating] = useState(false);
 
-  const [investigations, setInvestigations] = useState<StructuredInvestigation[]>([
-    {
-      id: 'inv-01',
-      query: 'Why is checkout-api failing in production?',
-      timestamp: '19:42:10 UTC',
-      stepsCompleted: [
-        'Kubernetes state inspected (3/10 pods unhealthy, CrashLoopBackOff)',
-        'Deployment history inspected (v1.8.2 deployed 14 mins ago)',
-        'Pod stdout logs analyzed (500 Internal Server Error, connection pool timeout)',
-        'Prometheus metrics correlated (DB latency +37%, DB pool saturation 98%)',
-        'Recent Git changes analyzed (commit abc1234 added connection leak in loop)',
-        'Security events checked (0 active CVEs, no unauthorized ingress)'
-      ],
-      likelyRootCause: 'Database connection exhaustion after v1.8.2 deployment',
-      confidence: 93,
-      evidence: [
-        'PostgreSQL connection pool reached 98% saturation within 4 mins of rollout',
-        'DB query latency increased +37% compared to baseline',
-        'Pod restarts triggered by failed liveness probes on /healthz',
-        'Staged commit abc1234 omitted pg_pool.release() in error catch branch'
-      ],
-      recommendedAction: 'Rollback checkout-api to v1.8.1 and patch connection pool leak',
-      proposedCommand: 'kubectl rollout undo deployment/checkout-api -n production',
-      risk: 'MEDIUM',
-      status: 'PROPOSED'
-    }
-  ]);
+  const [investigations, setInvestigations] = useState<StructuredInvestigation[]>([]);
 
   if (!isOpen) return null;
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputVal.trim()) return;
     const queryText = inputVal.trim();
     setInputVal('');
     setIsInvestigating(true);
 
-    setTimeout(() => {
-      setIsInvestigating(false);
+    const targetService = extractService(queryText);
+
+    try {
+      const result = await invoke<DiagnosticResult>('analyze_service_why', {
+        targetService,
+        env,
+        mode: aiMode,
+      });
+
+      const newInv: StructuredInvestigation = {
+        id: `inv-${Date.now()}`,
+        query: queryText,
+        timestamp: new Date().toLocaleTimeString() + ' UTC',
+        stepsCompleted: result.timeline.map(e => `${e.source}: ${e.description}`),
+        likelyRootCause: result.root_cause_candidates[0]?.title || result.recommendation,
+        evidence: result.symptoms,
+        recommendedAction: result.recommendation,
+        proposedCommand: result.action_command,
+        risk: result.status === 'critical' ? 'CRITICAL' : result.status === 'degraded' ? 'HIGH' : 'LOW',
+        status: 'PROPOSED',
+      };
+      setInvestigations(prev => [newInv, ...prev]);
+    } catch {
       const newInv: StructuredInvestigation = {
         id: `inv-${Date.now()}`,
         query: queryText,
@@ -89,7 +94,6 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
           'Policy evaluation checked against production safety rules'
         ],
         likelyRootCause: `Automated analysis for "${queryText}": Diagnostic telemetry indicates resource constraint or policy violation.`,
-        confidence: 89,
         evidence: [
           'High memory working set observed (>88% of limit)',
           'Recent rollout triggered configuration drift',
@@ -101,7 +105,9 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
         status: 'PROPOSED'
       };
       setInvestigations(prev => [newInv, ...prev]);
-    }, 900);
+    } finally {
+      setIsInvestigating(false);
+    }
   };
 
   const handleApprove = (invId: string, cmd: string) => {
@@ -214,14 +220,14 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
                 ))}
               </div>
 
-              {/* Root Cause & Confidence */}
+              {/* Root Cause */}
               <div className="border border-slate-800 rounded p-2.5 bg-[#0a0e18]">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-bold text-[10px] uppercase">
                     LIKELY ROOT CAUSE
                   </span>
                   <span className="px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 text-[10px] font-bold border border-indigo-500/30">
-                    {inv.confidence}% CONFIDENCE
+                    EVIDENCE-LINKED
                   </span>
                 </div>
                 <div className="font-bold text-slate-100 text-xs mt-1">
