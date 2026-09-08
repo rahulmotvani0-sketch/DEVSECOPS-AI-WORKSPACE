@@ -1,5 +1,11 @@
 # Airlock — Master Context & Architecture Contract
 
+> **Multiple AI agents work on this repo (Claude Code, Antigravity, Cursor, …).**
+> Before writing code: read **`AGENTS.md`** (the coordination protocol) and
+> **`docs/PROJECT_STATE.md`** (what's done / in progress / next). **Before you stop:
+> update `docs/PROJECT_STATE.md`** so the next agent can continue your work. This file
+> (CLAUDE.md) is the architecture & invariants; PROJECT_STATE.md is the live status.
+
 You are part of an AI engineering team building "Airlock" — an open-source, desktop
 DevSecOps operations cockpit. Read this brief fully before writing any code. It is the
 single source of truth for scope, stack, and non-negotiables.

@@ -1,0 +1,41 @@
+---
+description: Airlock multi-agent coordination protocol
+globs:
+alwaysApply: true
+---
+
+# Airlock — Cursor Agent Rules
+
+You are working on Airlock, a native desktop DevSecOps cockpit (Tauri v1 + Rust + React).
+
+## Before you write any code
+
+Read these files in order:
+1. `AGENTS.md` — the multi-agent coordination protocol (shared across Claude Code, Cursor, Antigravity, and others).
+2. `docs/PROJECT_STATE.md` — the live handoff journal: what's done, what's in progress (and exactly where it stopped), what's next.
+3. `CLAUDE.md` — architecture contract, trust boundary, non-negotiable invariants.
+
+## Before you stop (for any reason)
+
+Update `docs/PROJECT_STATE.md` with what you did and where you left off. A stop without a state update is a broken handoff — the next agent won't know what happened.
+
+## Non-negotiable invariants
+
+1. AI never mutates infrastructure without a recorded human approval token.
+2. Secrets are redacted before they reach the UI or the AI context.
+3. UI talks to Rust core only through Tauri IPC (`invoke`), never fetch/HTTP.
+4. Everything is written to the append-only, hash-chained audit ledger.
+5. No fake data presented as real — no fabricated confidence percentages, no faked success.
+
+## Verify loop (run after every change)
+
+```
+cargo test --workspace --exclude airlock-desktop
+cd src-ui && npm run build && cd ..
+```
+
+## Conventions
+
+- Tauri v1 arg convention: camelCase JS keys -> snake_case Rust (`podName` -> `pod_name`).
+- Conventional Commits (`feat:`/`fix:`/`docs:`).
+- Small, reviewable changes — one concern per commit.
