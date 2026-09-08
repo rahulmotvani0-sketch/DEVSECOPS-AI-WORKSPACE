@@ -1,0 +1,24 @@
+# Rust build artifacts
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Node / Web artifacts
+node_modules/
+dist/
+.vite/
+*.log
+
+# Large binary installers & packages
+*.deb
+*.rpm
+*.dmg
+*.iso
+
+# Local caches & runtime state
+.airlock/
+.devsecops/
+.pkgconfig/
+.DS_Store
+*.tmp
+*.bak
