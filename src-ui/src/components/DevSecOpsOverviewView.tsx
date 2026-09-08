@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
 import {
   Activity,
   AlertOctagon,
@@ -9,8 +10,9 @@ import {
   Sparkles,
   Play,
   Lock,
+  ShieldCheck,
 } from 'lucide-react';
-import { DiagnosticResult, EnvironmentTier } from '../types';
+import { DiagnosticResult, EnvironmentTier, SystemStatus, ResourceNode, PolicyDecision } from '../types';
 
 interface DevSecOpsOverviewViewProps {
   currentEnv: EnvironmentTier;
@@ -37,6 +39,35 @@ export const DevSecOpsOverviewView: React.FC<DevSecOpsOverviewViewProps> = ({
   onOpenCopilot,
   onExecutePatch,
 }) => {
+  const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
+  const [resourceTree, setResourceTree] = useState<ResourceNode[]>([]);
+  const [policyPreview, setPolicyPreview] = useState<PolicyDecision | null>(null);
+
+  useEffect(() => {
+    invoke<SystemStatus>('get_system_status')
+      .then(setSystemStatus)
+      .catch(() => setSystemStatus(null));
+    invoke<ResourceNode[]>('get_resource_tree')
+      .then(setResourceTree)
+      .catch(() => setResourceTree([]));
+  }, [currentEnv, isPatched]);
+
+  useEffect(() => {
+    if (!diagnostic?.action_command || isPatched) {
+      setPolicyPreview(null);
+      return;
+    }
+    invoke<PolicyDecision>('evaluate_policy', {
+      env: currentEnv,
+      actionCmd: diagnostic.action_command,
+    })
+      .then(setPolicyPreview)
+      .catch(() => setPolicyPreview(null));
+  }, [diagnostic?.action_command, currentEnv, isPatched]);
+
+  const healthyCount = resourceTree.filter(n => n.status === 'healthy').length;
+  const totalCount = resourceTree.length || 3;
+
   return (
     <div
       style={{
@@ -108,10 +139,10 @@ export const DevSecOpsOverviewView: React.FC<DevSecOpsOverviewViewProps> = ({
             <Activity size={16} color={isPatched ? '#10b981' : '#f59e0b'} />
           </div>
           <div style={{ fontSize: '24px', fontWeight: 700, color: isPatched ? '#34d399' : '#fbbf24', marginTop: '6px' }}>
-            {isPatched ? '100%' : '98.4%'}
+            {totalCount > 0 ? `${Math.round((healthyCount / totalCount) * 100)}%` : '—'}
           </div>
           <div style={{ fontSize: '11px', color: '#8091a7', marginTop: '3px' }}>
-            {isPatched ? 'All 3 workloads healthy' : '1 degraded workload (checkout-api)'}
+            {healthyCount === totalCount ? `All ${totalCount} workloads healthy` : `${totalCount - healthyCount} degraded of ${totalCount}`}
           </div>
         </div>
 
@@ -279,6 +310,24 @@ export const DevSecOpsOverviewView: React.FC<DevSecOpsOverviewViewProps> = ({
 
               {!isPatched && (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                  {policyPreview && (
+                    <div style={{
+                      fontSize: '11px',
+                      color: policyPreview.requires_human_approval ? '#fbbf24' : '#34d399',
+                      backgroundColor: policyPreview.requires_human_approval ? 'rgba(251, 191, 36, 0.08)' : 'rgba(52, 211, 153, 0.08)',
+                      border: `1px solid ${policyPreview.requires_human_approval ? 'rgba(251, 191, 36, 0.3)' : 'rgba(52, 211, 153, 0.3)'}`,
+                      borderRadius: '4px',
+                      padding: '4px 8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}>
+                      <ShieldCheck size={12} />
+                      {policyPreview.requires_human_approval
+                        ? `Policy: ${policyPreview.reason}`
+                        : 'Policy: auto-allowed'}
+                    </div>
+                  )}
                   <button
                     onClick={onExecutePatch}
                     style={{
@@ -479,7 +528,7 @@ export const DevSecOpsOverviewView: React.FC<DevSecOpsOverviewViewProps> = ({
                 fontFamily: 'var(--font-mono)',
               }}
             >
-              Cluster: {currentEnv} • 3 Services • 1 Ingress
+              Cluster: {currentEnv} • {totalCount} Resources{systemStatus ? ` • ${systemStatus.total_audit_entries} audit entries` : ''}
             </div>
           </div>
 

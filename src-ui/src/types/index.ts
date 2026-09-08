@@ -4,11 +4,11 @@ export type AIMode = 'LOCAL' | 'CLOUD' | 'AUTO';
 export interface ResourceNode {
   id: string;
   name: string;
-  category: 'Environment' | 'Cloud' | 'Kubernetes' | 'Infrastructure' | 'Security' | 'Observability' | 'CiCd' | 'Incident' | 'Tool';
-  environment: EnvironmentTier;
-  status: 'Healthy' | 'Degraded' | 'Critical' | 'Unknown';
-  parentId?: string;
-  level?: number;
+  category: string;
+  environment: string;
+  status: string;
+  parent_id?: string | null;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RootCauseCandidate {
@@ -108,6 +108,22 @@ export interface AuditEntry {
   error_log?: string | null;
   previous_hash: string;
   entry_hash: string;
+}
+
+export interface SystemStatus {
+  active_environment: string;
+  ai_mode: string;
+  safety_mode: string;
+  audit_log_enabled: boolean;
+  total_audit_entries: number;
+  audit_tamper_clean: boolean;
+}
+
+export interface PolicyDecision {
+  allowed: boolean;
+  operation_class: string;
+  requires_human_approval: boolean;
+  reason: string;
 }
 
 export interface K8sClusterStatus {
