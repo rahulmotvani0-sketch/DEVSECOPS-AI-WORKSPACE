@@ -1,0 +1,53 @@
+name: "🐛 Bug report"
+description: Something doesn't work as expected
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! For **security** issues, do NOT file here — see SECURITY.md.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `...`
+        2. Click `...`
+        3. See error
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - airlock-core
+        - airlock-k8s
+        - airlock-prom
+        - airlock-pty
+        - airlock-ai
+        - airlock-cli
+        - desktop UI (src-ui / src-tauri)
+        - lab / docs / other
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Rust version (`rustc --version`), Node version, Ollama model, how you ran it.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant output. **Redact any secrets, cluster names, or account IDs first.**
+      render: shell

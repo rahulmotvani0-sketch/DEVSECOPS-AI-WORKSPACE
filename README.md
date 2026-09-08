@@ -5,7 +5,7 @@
 [![CI](https://github.com/airlock-dev/airlock/actions/workflows/ci.yml/badge.svg)](https://github.com/airlock-dev/airlock/actions)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Rust: 1.78+](https://img.shields.io/badge/Rust-1.78%2B-orange.svg)](https://www.rust-lang.org)
-[![Tauri: v2](https://img.shields.io/badge/Tauri-v2-24C8DB.svg)](https://tauri.app)
+[![Tauri: v1.6](https://img.shields.io/badge/Tauri-v1.6-24C8DB.svg)](https://tauri.app)
 [![Local AI: Ollama](https://img.shields.io/badge/Local%20AI-Ollama%20(qwen2.5--coder)-purple.svg)](https://ollama.ai)
 
 ---

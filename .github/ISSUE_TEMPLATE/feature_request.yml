@@ -1,0 +1,30 @@
+name: "✨ Feature request"
+description: Suggest an idea or improvement
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: The workflow or pain point, not just the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: checkboxes
+    id: invariants
+    attributes:
+      label: Invariant compatibility
+      description: Airlock will not accept features that weaken these. Confirm your idea fits.
+      options:
+        - label: This does not let the AI mutate infrastructure without human approval
+        - label: This does not expose secrets to the UI or AI context
+        - label: This does not force cloud AI where offline/air-gapped is required
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

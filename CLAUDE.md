@@ -30,7 +30,7 @@ offline-capable AI, secrets never leaked, and a tamper-evident audit trail.
    ledger, and execution engine are in the Rust core. The UI is a thin, untrusted client.
 
 ## TECH STACK (do not substitute without an ADR)
-- Desktop shell: Tauri v2 (Rust backend + web frontend, small binary, secure IPC)
+- Desktop shell: Tauri v1.6 (Rust backend + web frontend, small binary, secure IPC). NOTE: currently v1; a v2 upgrade is a tracked post-launch task, not an ad-hoc change.
 - Core logic: Rust — crate name `airlock-core`
 - Kubernetes: `kube-rs` (async, typed)
 - Prometheus: HTTP API via `reqwest` (or `prometheus-http-query`)

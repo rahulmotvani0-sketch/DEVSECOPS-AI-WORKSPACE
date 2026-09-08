@@ -386,13 +386,17 @@ struct VaultStatus {
     secrets_count: usize,
 }
 
+// TODO(vault): wire this to airlock_core::CredentialVault. These values are a
+// placeholder until the real vault handle is exposed through AirlockApi. Do NOT
+// present them as real secret counts in the demo or README until wired — a
+// security product must never show fabricated vault state.
 #[tauri::command]
 async fn vault_get_status() -> Result<VaultStatus, String> {
     Ok(VaultStatus {
         locked: true,
-        active_vault: "Production Vault (AES-GCM)".to_string(),
+        active_vault: "Not configured".to_string(),
         cipher: "AES-256-GCM".to_string(),
-        secrets_count: 14,
+        secrets_count: 0,
     })
 }
 

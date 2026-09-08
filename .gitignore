@@ -1,7 +1,10 @@
 # Rust build artifacts
 target/
 **/*.rs.bk
-Cargo.lock
+
+# NOTE: Cargo.lock is intentionally COMMITTED. Airlock is an application/binary
+# workspace, so a locked dependency set gives reproducible builds and pins
+# security-relevant versions. (Run `git add Cargo.lock` after this change.)
 
 # Node / Web artifacts
 node_modules/
@@ -9,7 +12,7 @@ dist/
 .vite/
 *.log
 
-# Large binary installers & packages
+# Large binary installers & packages (never commit these)
 *.deb
 *.rpm
 *.dmg
