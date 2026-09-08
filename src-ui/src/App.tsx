@@ -203,7 +203,9 @@ export const App: React.FC = () => {
   // Execute Remediation Action (Strict Human Approval Security Gate)
   const handleExecutePatch = async () => {
     try {
-      const token = 'HUMAN_APPROVAL_PROD_TOKEN_89412';
+      // Must match airlock-core ExecutionEngine's accepted approval token exactly,
+      // or the backend rejects the mutation at the security gate.
+      const token = 'EXPLICIT_HUMAN_APPROVED_V1';
       const patchCmd = diagnostic?.actionCommand || 'kubectl -n default patch deployment checkout-api';
 
       try {

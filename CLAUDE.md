@@ -5,6 +5,7 @@ DevSecOps operations cockpit. Read this brief fully before writing any code. It 
 single source of truth for scope, stack, and non-negotiables.
 
 ## WHAT WE'RE BUILDING (community-first framing)
+
 Airlock is one hardened desktop app that unifies everything an engineer touches during
 operations and incidents: multiple Kubernetes clusters, SSH bastions, cloud consoles,
 and observability — plus a LOCAL AI copilot that understands live cluster state and helps
@@ -16,6 +17,7 @@ The quiet foundation (which becomes the commercial layer later) is SECURITY: zer
 offline-capable AI, secrets never leaked, and a tamper-evident audit trail.
 
 ## NON-NEGOTIABLE PRINCIPLES (violating these = rejected PR)
+
 1. AI IS NEVER AN AUTHORITY. The AI may read, diagnose, and DRAFT changes. It may NEVER
    execute a mutating operation (patch/scale/delete/apply/exec-with-side-effects) on its
    own. Every mutation is hard-blocked until an explicit human approval is recorded.
@@ -29,7 +31,32 @@ offline-capable AI, secrets never leaked, and a tamper-evident audit trail.
 5. SECURITY-CRITICAL LOGIC LIVES IN RUST, NOT THE UI. The policy gate, redaction, audit
    ledger, and execution engine are in the Rust core. The UI is a thin, untrusted client.
 
+## THIS IS NATIVE DESKTOP SOFTWARE — NOT A WEB APP (violating these = rejected PR)
+
+Airlock is a native desktop application (Tauri), installed and run locally by the user.
+There is NO server to deploy, no hosted backend, no login, no multi-tenant SaaS. Build
+accordingly:
+
+- **No web-app architecture.** The React UI is a rendering layer inside a native OS window.
+  It talks to the Rust core ONLY through Tauri IPC (`invoke` / events) — never `fetch`/HTTP
+  to a backend of ours (there isn't one). No REST API server, no websockets to a cloud service.
+- **Native capabilities are the product.** Read the user's local kubeconfig and cloud
+  credential files, use the OS keychain (`keyring`), spawn local CLIs (`kubectl`/`aws`/
+  `terraform`) through the PTY, use the local filesystem and local SQLite. Prefer OS-native
+  integration over any web equivalent.
+- **Runs fully local & offline.** No runtime dependency on a CDN, external asset host, or our
+  servers. Bundle every asset into the binary. Source-of-truth state lives in Rust + SQLite,
+  never in browser storage (localStorage/IndexedDB are not our data layer).
+- **Cross-platform native.** Must build and behave correctly on Linux, macOS, and Windows —
+  mind path handling, shell differences (PowerShell vs bash), and per-OS packaging.
+- **Distributed as installers, updated as software.** Ship signed/notarized installers
+  (.deb/.AppImage/.dmg/.msi) + the Tauri updater. This is "download and install a release,"
+  not "git push to deploy."
+- **HTML mockups are design references only** — a picture of the UI, never the product or a
+  route to shipping a web page.
+
 ## TECH STACK (do not substitute without an ADR)
+
 - Desktop shell: Tauri v1.6 (Rust backend + web frontend, small binary, secure IPC). NOTE: currently v1; a v2 upgrade is a tracked post-launch task, not an ad-hoc change.
 - Core logic: Rust — crate name `airlock-core`
 - Kubernetes: `kube-rs` (async, typed)
@@ -43,6 +70,7 @@ offline-capable AI, secrets never leaked, and a tamper-evident audit trail.
 - Tests: `cargo test` for Rust (this is where the real coverage lives); Vitest for UI.
 
 ## REPO LAYOUT (monorepo)
+
 airlock/
 ├─ crates/
 │  ├─ airlock-core/        # PolicyEngine, AuditEngine, ContextEngine (redaction), ExecutionEngine
@@ -58,6 +86,7 @@ airlock/
 └─ .github/              # issue/PR templates, CI, workflows
 
 ## DEFINITION OF DONE (every task)
+
 - Compiles with zero warnings (`cargo clippy -- -D warnings`, `tsc --noEmit`).
 - New logic has tests. Security-critical logic (policy/redaction/audit) has tests that
   prove the guarantee (e.g., "a mutating op with no approval is rejected").
@@ -66,6 +95,7 @@ airlock/
 - Small, reviewable PRs. One concern per PR. Conventional Commits (feat:/fix:/docs:...).
 
 ## HOW WE COORDINATE
+
 - Work only inside your assigned module boundary (see Architecture Contract).
 - Cross-module communication happens ONLY through documented IPC commands / trait
   interfaces — never by importing another agent's internals.
@@ -77,22 +107,27 @@ airlock/
 # ARCHITECTURE CONTRACT
 
 ### 2.1 `airlock-core` (the trust boundary — most sensitive)
+
 - **PolicyEngine** — classifies every operation as `Read` (auto-allow) or `Mutate` (block until approval). Holds environment tiers (`Dev`/`Staging`/`Prod`) and the rule "in Prod, cloud AI blocked when sensitive context present."
 - **ContextEngine** — the DLP/redaction layer. Input: any text/stream headed for UI or AI. Output: same text with secrets replaced by typed tokens (`[REDACTED_AWS_KEY_ID]`, `[REDACTED_BEARER]`). Must be regex + entropy based and unit-tested against a secret corpus.
 - **AuditEngine** — append-only SQLite; every event = `{ts, actor, action, target, hash_prev, hash_self}`; `hash_self = sha256(prev || payload)`. Triggers block UPDATE/DELETE.
 - **ExecutionEngine** — the ONLY path that runs a mutating op, and only after `PolicyEngine` confirms a matching approval token exists.
 
 ### 2.2 Integration crates
+
 - `airlock-k8s`: list pods/deployments/events, stream (redacted) logs; mutating ops (`patch`,`scale`,`delete`) go THROUGH `ExecutionEngine`, never directly.
 - `airlock-prom`: instant + range PromQL, workload telemetry summaries, threshold distillation.
 - `airlock-pty`: spawn/kill PTY, stream stdout/stderr over IPC, bounded ring buffer.
 
 ### 2.3 `airlock-ai`
+
 - `LlmProvider` trait: `async fn complete(prompt, context) -> Result<Answer>`. Impls: `OllamaProvider` (default), `CloudProvider` (gated).
 - **RCA engine**: correlates Git commits + K8s events + Prom anomalies into a causal timeline; emits *evidence-linked hypotheses* (no fake confidence %) and a DRAFT remediation that must go through the gate.
 
 ### 2.4 IPC CONTRACT (the integration seam — keep this stable)
+
 Tauri commands the UI may call:
+
 ```
 k8s_list_pods(cluster, ns) -> Pod[]
 k8s_get_pod_logs(ns, pod, container?, tail?, redact?) -> K8sPodLog
@@ -112,4 +147,5 @@ get_audit_logs(limit) -> AuditEntry[]
 get_system_status() -> SystemStatus
 get_resource_tree() -> ResourceNode[]
 ```
+
 **Invariant:** the UI can NEVER call a mutation path without first obtaining an `approval_token` from a human action. There is no bypass command.
