@@ -1,0 +1,16 @@
+[package]
+name = "airlock-pty"
+version = "0.1.0"
+edition = "2021"
+description = "Hardened pseudoterminal management and buffered sessions for Airlock"
+
+[dependencies]
+airlock-core = { path = "../airlock-core" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+portable-pty.workspace = true
