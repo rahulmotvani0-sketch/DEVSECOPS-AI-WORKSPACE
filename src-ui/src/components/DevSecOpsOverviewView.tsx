@@ -16,6 +16,7 @@ interface DevSecOpsOverviewViewProps {
   currentEnv: EnvironmentTier;
   diagnostic: DiagnosticResult | null;
   isPatched: boolean;
+  executeError?: string | null;
   onOpenIncidents: () => void;
   onOpenDeployments: () => void;
   onOpenSecurity: () => void;
@@ -28,6 +29,7 @@ export const DevSecOpsOverviewView: React.FC<DevSecOpsOverviewViewProps> = ({
   currentEnv,
   diagnostic,
   isPatched,
+  executeError,
   onOpenIncidents,
   onOpenDeployments,
   onOpenSecurity,
@@ -276,25 +278,40 @@ export const DevSecOpsOverviewView: React.FC<DevSecOpsOverviewViewProps> = ({
               </button>
 
               {!isPatched && (
-                <button
-                  onClick={onExecutePatch}
-                  style={{
-                    padding: '6px 14px',
-                    backgroundColor: '#10b981',
-                    color: '#04120c',
-                    border: 'none',
-                    borderRadius: '5px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px',
-                  }}
-                >
-                  <Play size={12} fill="#04120c" />
-                  <span>Execute 512Mi Patch</span>
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                  <button
+                    onClick={onExecutePatch}
+                    style={{
+                      padding: '6px 14px',
+                      backgroundColor: '#10b981',
+                      color: '#04120c',
+                      border: 'none',
+                      borderRadius: '5px',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                    }}
+                  >
+                    <Play size={12} fill="#04120c" />
+                    <span>Execute 512Mi Patch</span>
+                  </button>
+                  {executeError && (
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#f87171',
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      borderRadius: '4px',
+                      padding: '4px 8px',
+                      maxWidth: '300px',
+                    }}>
+                      Gate rejected: {executeError}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

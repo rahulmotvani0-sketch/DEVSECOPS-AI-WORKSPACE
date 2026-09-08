@@ -111,7 +111,7 @@ export const App: React.FC = () => {
   ]);
   const [activeTabId, setActiveTabId] = useState<string>('tab-audit');
 
-  const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([
+  const [auditLogs, _setAuditLogs] = useState<AuditEntry[]>([
     {
       id: 'audit-001',
       timestamp: '2026-09-05T10:14:00Z',
@@ -201,56 +201,39 @@ export const App: React.FC = () => {
   }, []);
 
   // Execute Remediation Action (Strict Human Approval Security Gate)
+  const [executeError, setExecuteError] = useState<string | null>(null);
+
   const handleExecutePatch = async () => {
+    setExecuteError(null);
+    const token = 'EXPLICIT_HUMAN_APPROVED_V1';
+    const patchCmd = diagnostic?.actionCommand || 'kubectl -n default patch deployment checkout-api';
+
     try {
-      // Must match airlock-core ExecutionEngine's accepted approval token exactly,
-      // or the backend rejects the mutation at the security gate.
-      const token = 'EXPLICIT_HUMAN_APPROVED_V1';
-      const patchCmd = diagnostic?.actionCommand || 'kubectl -n default patch deployment checkout-api';
-
-      try {
-        await invoke('execute_action', {
-          env: currentEnv,
-          actionCmd: patchCmd,
-          token: token,
-        });
-      } catch {
-        // Desktop / Mock fallback
-      }
-
-      setIsPatched(true);
-      setActiveManifest((prev) => ({
-        ...prev,
-        content: prev.content.replace('memory: "256Mi"', 'memory: "512Mi"'),
-        hasDiagnostic: false,
-      }));
-
-      if (diagnostic) {
-        setDiagnostic({
-          ...diagnostic,
-          status: 'Healthy',
-          executionStatus: 'APPROVED & EXECUTED',
-        });
-      }
-
-      const newAudit: AuditEntry = {
-        id: `audit-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        operator: 'devops-engineer',
-        environment: currentEnv,
-        resourceTarget: 'checkout-api',
-        userRequest: 'Remediate memory exhaustion incident via DevSecOps AI Copilot',
-        aiProvider: aiMode,
-        aiModel: 'qwen2.5-coder',
-        suggestedCommand: patchCmd,
-        commandSource: 'DevSecOpsCopilot',
-        approvalStatus: 'Approved',
-        previousHash: auditLogs[auditLogs.length - 1]?.entryHash || 'GENESIS',
-        entryHash: `hash_${Math.random().toString(16).substring(2, 10)}${Math.random().toString(16).substring(2, 10)}`,
-      };
-      setAuditLogs((prev) => [...prev, newAudit]);
+      await invoke('execute_action', {
+        env: currentEnv,
+        actionCmd: patchCmd,
+        token: token,
+      });
     } catch (err) {
-      console.error('Failed to execute patch:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('execute_action rejected:', msg);
+      setExecuteError(msg);
+      return;
+    }
+
+    setIsPatched(true);
+    setActiveManifest((prev) => ({
+      ...prev,
+      content: prev.content.replace('memory: "256Mi"', 'memory: "512Mi"'),
+      hasDiagnostic: false,
+    }));
+
+    if (diagnostic) {
+      setDiagnostic({
+        ...diagnostic,
+        status: 'Healthy',
+        executionStatus: 'APPROVED & EXECUTED',
+      });
     }
   };
 
@@ -312,6 +295,7 @@ export const App: React.FC = () => {
               currentEnv={currentEnv}
               diagnostic={diagnostic}
               isPatched={isPatched}
+              executeError={executeError}
               onOpenIncidents={() => setDevsecopsView('incidents')}
               onOpenDeployments={() => setDevsecopsView('deployments')}
               onOpenSecurity={() => setDevsecopsView('security')}
