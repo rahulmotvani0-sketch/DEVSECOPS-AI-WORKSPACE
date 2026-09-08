@@ -1,4 +1,5 @@
 # Team Proposal: The Next-Gen AI-Native Infrastructure Workspace
+
 ## *"What Remote Desktop Manager Did for SysAdmins, Reimagined for Modern DevSecOps with AI"*
 
 ---
@@ -13,17 +14,19 @@
 
 Today, a DevOps / SRE / Platform engineer managing production infrastructure suffers from intense tool sprawl:
 
-| Activity | Tool Sprawl Today | Pain Point |
-| :--- | :--- | :--- |
-| **Cluster Management** | Lens, k9s, raw `kubectl` CLI | Context switching between multiple clusters & kubeconfigs |
-| **Bastions & Remote Access** | PuTTY, Terminal tabs, AWS SSM Session Manager | Scattered SSH keys, lost terminal history, no unified session view |
-| **Observability & Triage** | Grafana, Datadog, Prometheus UI, AWS CloudWatch | 10+ browser tabs open during an incident; manual correlation |
-| **Credential Management** | 1Password, HashiCorp Vault, local `.env` / AWS profiles | High risk of credential leakage, copy-pasting plaintext keys |
-| **Incident Investigation** | Slack threads, manual log grepping, disparate dashboards | High MTTR (Mean Time to Resolution), tribal knowledge silos |
-| **AI Assistants Today** | Web ChatGPT, Claude, Cursor | Blind to live cluster topology, zero security gates, leaks secrets |
+| Activity                           | Tool Sprawl Today                                        | Pain Point                                                         |
+| :--------------------------------- | :------------------------------------------------------- | :----------------------------------------------------------------- |
+| **Cluster Management**       | Lens, k9s, raw`kubectl` CLI                            | Context switching between multiple clusters & kubeconfigs          |
+| **Bastions & Remote Access** | PuTTY, Terminal tabs, AWS SSM Session Manager            | Scattered SSH keys, lost terminal history, no unified session view |
+| **Observability & Triage**   | Grafana, Datadog, Prometheus UI, AWS CloudWatch          | 10+ browser tabs open during an incident; manual correlation       |
+| **Credential Management**    | 1Password, HashiCorp Vault, local`.env` / AWS profiles | High risk of credential leakage, copy-pasting plaintext keys       |
+| **Incident Investigation**   | Slack threads, manual log grepping, disparate dashboards | High MTTR (Mean Time to Resolution), tribal knowledge silos        |
+| **AI Assistants Today**      | Web ChatGPT, Claude, Cursor                              | Blind to live cluster topology, zero security gates, leaks secrets |
 
 ### Why Existing "Remote Desktop Managers" Fall Short
+
 Traditional Remote Desktop Managers (like Devolutions RDM, Royal TS, or mRemoteNG) were built 15 years ago for Windows/Linux RDP/VNC/SSH servers. They:
+
 - ❌ Know nothing about Kubernetes pods, ephemeral containers, Helm releases, or GitOps.
 - ❌ Have zero integration with Prometheus, PromQL, or modern microservice telemetry.
 - ❌ Have zero AI intelligence or automated incident correlation.
@@ -61,6 +64,7 @@ We are combining the **centralized connection & session management of Remote Des
 ## 4. The 5 Core Pillars of the Platform
 
 ### Pillar 1: Universal Connection & Session Hub (Like RDM)
+
 - **Hierarchical Asset Tree**: Group infrastructure by **Environment** (`Production`, `Staging`, `Development`), **Cloud Provider** (`AWS`, `GCP`, `Azure`), **Cluster**, and **Service**.
 - **Embedded Multi-Protocol Sessions**:
   - **Kubernetes**: Live pod listings, deployment controllers, event streams, container logs.
@@ -69,17 +73,20 @@ We are combining the **centralized connection & session management of Remote Des
   - **Manifest & IaC Editor**: In-situ editing for YAML, Terraform, and Dockerfiles with diff visualization.
 
 ### Pillar 2: Zero-Knowledge Credential Vault
+
 - Engineers never need to copy-paste passwords, AWS keys, or kubeconfig certificates into their terminal or clipboard.
 - The **Rust Credential Vault** injects tokens directly into backend network streams.
 - **DLP Boundary**: Passwords, AWS Access Keys, and Bearer tokens are intercepted and redacted (`[REDACTED_AWS_KEY_ID]`) before data ever enters the UI or AI Router.
 
 ### Pillar 3: Embedded AI Diagnostic Engine ("devsecops why")
+
 - Instead of just being a passive viewer, the workspace has a **continuous diagnostic brain**:
   - Automatically correlates **Git commits** + **Kubernetes events** + **Prometheus metric anomalies**.
   - Reconstructs a causal incident timeline in seconds.
   - Generates exact remediation patches with probability scores.
 
 ### Pillar 4: The Zero-Trust Security & Policy Gate
+
 - **AI is NEVER an authority**: The AI can *diagnose* and *recommend*, but it can **never** independently execute infrastructure mutations.
 - **Operation Classification**:
   - **READ commands** (`kubectl get`, `promql_query`): Auto-approved.
@@ -88,6 +95,7 @@ We are combining the **centralized connection & session management of Remote Des
   - In `Production`, cloud AI is strictly blocked when sensitive context is detected, enforcing local offline AI models (e.g. `qwen2.5-coder` via Ollama).
 
 ### Pillar 5: Cryptographically Signed Audit Ledger
+
 - Every command typed, session opened, AI recommendation generated, and human approval granted is recorded in an **immutable, append-only SQLite store**.
 - Protected by database-level triggers forbidding `UPDATE` and `DELETE`.
 - Linked via **SHA-256 cryptographic hash chains** for instant SOC-2 and ISO-27001 audit compliance.
@@ -96,21 +104,22 @@ We are combining the **centralized connection & session management of Remote Des
 
 ## 5. Competitive Comparison: Why This Wins
 
-| Capability | Remote Desktop Manager (RDM) | Lens / k9s | Datadog / Grafana | **Our DevSecOps AI Workspace** |
-| :--- | :---: | :---: | :---: | :---: |
-| **Session & Connection Tree** | ✅ (RDP/SSH only) | ⚠️ (K8s only) | ❌ | **✅ (K8s + SSH + Prom + Cloud)** |
-| **Embedded PTY Terminal** | ✅ | ⚠️ (Basic) | ❌ | **✅ (High-perf xterm + bounded ring buffer)** |
-| **Multi-Signal AI Root Cause**| ❌ | ❌ | ⚠️ (Basic AI, no actions) | **✅ (Git + K8s + Prom Causal Timeline)** |
-| **Inline Code/Manifest Diff** | ❌ | ❌ | ❌ | **✅ (Ctrl+K inline diffs like Cursor)** |
-| **Zero-Trust Human Gate**     | ❌ | ❌ | ❌ | **✅ (Authoritative Policy Engine)** |
-| **Local Offline AI Support**  | ❌ | ❌ | ❌ | **✅ (Ollama / Qwen2.5-Coder air-gapped)** |
-| **SHA-256 Audit Chain**       | ⚠️ (Basic logs) | ❌ | ⚠️ (Cloud logs) | **✅ (Tamper-evident cryptographic ledger)** |
+| Capability                           | Remote Desktop Manager (RDM) |   Lens / k9s   |      Datadog / Grafana      |         **Our DevSecOps AI Workspace**         |
+| :----------------------------------- | :--------------------------: | :-------------: | :-------------------------: | :--------------------------------------------------: |
+| **Session & Connection Tree**  |      ✅ (RDP/SSH only)      | ⚠️ (K8s only) |             ❌             |       **✅ (K8s + SSH + Prom + Cloud)**       |
+| **Embedded PTY Terminal**      |              ✅              |  ⚠️ (Basic)  |             ❌             | **✅ (High-perf xterm + bounded ring buffer)** |
+| **Multi-Signal AI Root Cause** |              ❌              |       ❌       | ⚠️ (Basic AI, no actions) |   **✅ (Git + K8s + Prom Causal Timeline)**   |
+| **Inline Code/Manifest Diff**  |              ❌              |       ❌       |             ❌             |    **✅ (Ctrl+K inline diffs like Cursor)**    |
+| **Zero-Trust Human Gate**      |              ❌              |       ❌       |             ❌             |      **✅ (Authoritative Policy Engine)**      |
+| **Local Offline AI Support**   |              ❌              |       ❌       |             ❌             |   **✅ (Ollama / Qwen2.5-Coder air-gapped)**   |
+| **SHA-256 Audit Chain**        |      ⚠️ (Basic logs)      |       ❌       |      ⚠️ (Cloud logs)      |  **✅ (Tamper-evident cryptographic ledger)**  |
 
 ---
 
 ## 6. What We Have Built Already (Proof of Concept Status)
 
 Our workspace is not vaporware; the foundation is already running and tested:
+
 1. **Authoritative Rust Core (`devsecops-core`)**:
    - 42 passing unit and integration tests.
    - Built-in `PolicyEngine`, `AuditEngine` (SQLite hash chain), `ContextEngine` (secret redaction), and `ExecutionEngine`.
