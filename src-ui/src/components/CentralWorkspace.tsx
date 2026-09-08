@@ -176,26 +176,26 @@ export const CentralWorkspace: React.FC<CentralWorkspaceProps> = ({
                         {new Date(log.timestamp).toLocaleTimeString()}
                       </td>
                       <td style={{ padding: '10px 14px', color: '#f0f6fc' }}>{log.operator}</td>
-                      <td style={{ padding: '10px 14px', color: '#38bdf8' }}>{log.resourceTarget}</td>
+                      <td style={{ padding: '10px 14px', color: '#38bdf8' }}>{log.resource_target}</td>
                       <td style={{ padding: '10px 14px', color: '#c9d1d9', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
-                        {log.suggestedCommand.substring(0, 42)}...
+                        {log.suggested_command.substring(0, 42)}...
                       </td>
                       <td style={{ padding: '10px 14px' }}>
                         <span
                           style={{
                             padding: '2px 8px',
                             borderRadius: '4px',
-                            backgroundColor: log.approvalStatus === 'Approved' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                            color: log.approvalStatus === 'Approved' ? '#34d399' : '#f87171',
+                            backgroundColor: log.approval_status === 'approved_and_executed' || log.approval_status === 'auto_executed_read' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                            color: log.approval_status === 'approved_and_executed' || log.approval_status === 'auto_executed_read' ? '#34d399' : '#f87171',
                             fontSize: '11px',
                             fontWeight: 600,
                           }}
                         >
-                          {log.approvalStatus}
+                          {log.approval_status}
                         </span>
                       </td>
                       <td style={{ padding: '10px 14px', color: '#8b949e', fontFamily: 'var(--font-mono)', fontSize: '10.5px' }}>
-                        {log.entryHash.substring(0, 16)}...
+                        {log.entry_hash.substring(0, 16)}...
                       </td>
                     </tr>
                   ))}

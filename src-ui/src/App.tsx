@@ -141,38 +141,13 @@ export const App: React.FC = () => {
   ]);
   const [activeTabId, setActiveTabId] = useState<string>('tab-audit');
 
-  const [auditLogs, _setAuditLogs] = useState<AuditEntry[]>([
-    {
-      id: 'audit-001',
-      timestamp: '2026-09-05T10:14:00Z',
-      operator: 'devops-engineer',
-      environment: 'Production',
-      resourceTarget: 'prod-eks-us-east-1',
-      userRequest: 'k8s_read_cluster_status',
-      aiProvider: 'Local Ollama',
-      aiModel: 'qwen2.5-coder',
-      suggestedCommand: 'k8s_read_cluster_status',
-      commandSource: 'Operator',
-      approvalStatus: 'Approved',
-      previousHash: 'GENESIS_HASH_000000000000000000000000000000000000000000000000000000000000',
-      entryHash: 'a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0',
-    },
-    {
-      id: 'audit-002',
-      timestamp: '2026-09-05T10:15:30Z',
-      operator: 'devops-engineer',
-      environment: 'Production',
-      resourceTarget: 'checkout-api',
-      userRequest: 'promql_query(checkout-api)',
-      aiProvider: 'Local Ollama',
-      aiModel: 'qwen2.5-coder',
-      suggestedCommand: 'promql_query(checkout-api)',
-      commandSource: 'Operator',
-      approvalStatus: 'Approved',
-      previousHash: 'a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0',
-      entryHash: 'b2c3d4e5f6a17890123456789abcdef0123456789abcdef0123456789abcdef0',
-    },
-  ]);
+  const [auditLogs, setAuditLogs] = useState<AuditEntry[]>([]);
+
+  useEffect(() => {
+    invoke<AuditEntry[]>('get_audit_logs', { limit: 100 })
+      .then(setAuditLogs)
+      .catch(() => setAuditLogs([]));
+  }, [isPatched]);
 
   // AI Diagnostic State — fetched from backend, fallback on error
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);

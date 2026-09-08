@@ -93,16 +93,21 @@ export interface AuditEntry {
   id: string;
   timestamp: string;
   operator: string;
-  environment: EnvironmentTier;
-  resourceTarget: string;
-  userRequest: string;
-  aiProvider: string;
-  aiModel: string;
-  suggestedCommand: string;
-  commandSource: string;
-  approvalStatus: string;
-  previousHash: string;
-  entryHash: string;
+  environment: string;
+  resource_target: string;
+  user_request: string;
+  ai_provider: string;
+  ai_model: string;
+  context_sources_used: string[];
+  evidence_summary: string;
+  suggested_command: string;
+  command_source: string;
+  policy_decision: string;
+  approval_status: string;
+  execution_result?: string | null;
+  error_log?: string | null;
+  previous_hash: string;
+  entry_hash: string;
 }
 
 export interface K8sClusterStatus {
