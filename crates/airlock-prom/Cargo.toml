@@ -1,0 +1,19 @@
+[package]
+name = "airlock-prom"
+version = "0.1.0"
+edition = "2021"
+description = "Prometheus observability client, telemetry summaries, and mutation guard for Airlock"
+
+[dependencies]
+airlock-core = { path = "../airlock-core" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+async-trait.workspace = true
+reqwest.workspace = true
+regex.workspace = true
