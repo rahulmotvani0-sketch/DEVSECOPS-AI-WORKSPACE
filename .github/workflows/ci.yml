@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  rust-check-and-test:
+    name: Rust Quality Gates & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run fmt check
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy (-D warnings)
+        run: cargo clippy --workspace --exclude airlock-desktop -- -D warnings
+
+      - name: Run unit & integration tests
+        run: cargo test --workspace --exclude airlock-desktop --verbose
+
+  frontend-check:
+    name: Frontend Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: src-ui/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: src-ui
+        run: npm ci
+
+      - name: Frontend Typecheck & Build
+        working-directory: src-ui
+        run: npm run build

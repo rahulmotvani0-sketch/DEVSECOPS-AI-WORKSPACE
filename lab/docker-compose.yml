@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: devsecops-lab-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  checkout-api:
+    image: alpine:3.19
+    container_name: devsecops-lab-checkout-api
+    command: ["sh", "-c", "echo 'Initializing checkout service...'; sleep 3600"]
+    environment:
+      - SERVICE_NAME=checkout-api
+      - MEMORY_LIMIT=256Mi

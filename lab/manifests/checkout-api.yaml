@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-api
+  namespace: default
+  labels:
+    app: checkout-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: checkout-api
+  template:
+    metadata:
+      labels:
+        app: checkout-api
+    spec:
+      containers:
+      - name: checkout-api
+        image: checkout-api:v1.4.2
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+        env:
+        - name: ENABLE_FRAUD_CACHE
+          value: "true"
