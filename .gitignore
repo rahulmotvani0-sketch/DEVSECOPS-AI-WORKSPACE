@@ -22,6 +22,8 @@ dist/
 .airlock/
 .devsecops/
 .pkgconfig/
+.pkg-config-shims/
+.lib-shims/
 .DS_Store
 *.tmp
 *.bak
