@@ -2,7 +2,7 @@
 set -e
 
 echo "============================================================"
-echo " DEVSECOPS AI WORKSPACE — LOCAL LAB SETUP"
+echo " AIRLOCK — LOCAL CHAOS LAB SETUP"
 echo "============================================================"
 echo "Setting up local demonstration environment..."
 
