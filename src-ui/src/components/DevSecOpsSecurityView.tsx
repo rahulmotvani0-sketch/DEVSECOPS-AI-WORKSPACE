@@ -105,6 +105,10 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
 
   return (
     <div className="flex-1 flex flex-col bg-[#0b0f17] text-slate-200 overflow-hidden font-mono text-xs">
+      {/* Preview notice */}
+      <div className="px-6 py-2 bg-amber-500/10 border-b border-amber-500/30 text-amber-300 text-[11px] font-sans flex items-center gap-2">
+        <span className="font-bold">Preview</span> — Security scanning backend is v0.2 scope. Data below is illustrative.
+      </div>
       {/* Top Banner */}
       <div className="border-b border-slate-800 bg-[#0d131f] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -116,8 +120,8 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
               <h1 className="text-sm font-bold text-slate-100 tracking-wide">
                 DEVSECOPS SECURITY POSTURE & CVE ENGINE
               </h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-red-500/20 text-red-300 border border-red-500/30">
-                MULTI-CONNECTOR AGGREGATOR
+              <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                PREVIEW
               </span>
             </div>
             <p className="text-[11px] text-slate-400 mt-0.5 font-sans">

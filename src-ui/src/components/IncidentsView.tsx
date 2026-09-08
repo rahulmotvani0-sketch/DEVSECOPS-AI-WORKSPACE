@@ -54,6 +54,19 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
         fontFamily: 'var(--font-sans)',
       }}
     >
+      {/* Preview Banner */}
+      <div style={{
+        padding: '8px 14px',
+        backgroundColor: 'rgba(251, 191, 36, 0.08)',
+        border: '1px solid rgba(251, 191, 36, 0.3)',
+        borderRadius: '6px',
+        fontSize: '12px',
+        color: '#fbbf24',
+        fontWeight: 600,
+      }}>
+        Preview — Incident correlation backend is v0.2 scope. Data below is illustrative.
+      </div>
+
       {/* 1. Incident Banner */}
       <div
         style={{
