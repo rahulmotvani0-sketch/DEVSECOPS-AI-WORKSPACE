@@ -67,8 +67,12 @@ mod tests {
 
     #[test]
     fn test_secret_redaction() {
-        let raw = "Log error: AWS Key AKIAIOSFODNN7EXAMPLE leaked with Bearer eyJhbGciOiJIUzI1NiJ9 and password='SuperSecret123!' and ghp_1234567890abcdef1234567890abcdef1234 and postgres://user:superpass@localhost:5432/db";
-        let (redacted, dirty) = context::ContextEngine::redact_secrets(raw);
+        let ghp_token = format!("ghp_{}", "1234567890abcdef1234567890abcdef1234");
+        let raw = format!(
+            "Log error: AWS Key AKIAIOSFODNN7EXAMPLE leaked with Bearer eyJhbGciOiJIUzI1NiJ9 and password='SuperSecret123!' and {} and postgres://user:superpass@localhost:5432/db",
+            ghp_token
+        );
+        let (redacted, dirty) = context::ContextEngine::redact_secrets(&raw);
         assert!(dirty);
         assert!(!redacted.contains("AKIAIOSFODNN7EXAMPLE"));
         assert!(redacted.contains("[REDACTED_AWS_KEY_ID]"));

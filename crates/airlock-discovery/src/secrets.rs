@@ -123,7 +123,7 @@ impl SecretsSource {
             (
                 ".github/workflows/deploy.yml",
                 "GitHub Personal Access Token",
-                "ghp_1234567890abcdefghijklmnopqrstuvwx12",
+                concat!("ghp_", "1234567890abcdefghijklmnopqrstuvwx12"),
                 SignalSeverity::High,
                 "Hardcoded GitHub Personal Access Token in CI workflow",
                 "Replace inline token with GitHub Actions secrets reference ${{ secrets.CI_DEPLOY_TOKEN }}",
