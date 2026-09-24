@@ -8,7 +8,7 @@ import {
   Sparkles,
   Server,
   Activity,
-  FileCode
+  FileCode,
 } from 'lucide-react';
 import { DeploymentRiskRecord } from '../types';
 
@@ -32,10 +32,10 @@ const mockDeployments: DeploymentRiskRecord[] = [
       'Database migration detected (ALTER TABLE transactions ADD COLUMN status_code)',
       'Payment service downstream dependency affected',
       'Previous deployment (v1.8.1) experienced 500 error spikes',
-      'Critical dependency vulnerability CVE-2024-3406 in serialization library'
+      'Critical dependency vulnerability CVE-2024-3406 in serialization library',
     ],
     recommendation: 'REQUIRE APPROVAL',
-    stagedCommit: 'abc1234 - feat: update checkout transaction state machine'
+    stagedCommit: 'abc1234 - feat: update checkout transaction state machine',
   },
   {
     deploymentId: 'dep-9820',
@@ -50,10 +50,10 @@ const mockDeployments: DeploymentRiskRecord[] = [
     reasons: [
       'Minor API schema update (backward compatible)',
       'Zero database schema migrations',
-      'Low traffic window schedule'
+      'Low traffic window schedule',
     ],
     recommendation: 'REQUIRE APPROVAL',
-    stagedCommit: '7ff1201 - fix: retry exponential backoff for stripe webhook'
+    stagedCommit: '7ff1201 - fix: retry exponential backoff for stripe webhook',
   },
   {
     deploymentId: 'dep-9819',
@@ -68,128 +68,292 @@ const mockDeployments: DeploymentRiskRecord[] = [
     reasons: [
       'Frontend static assets & CSS updates only',
       'All automated canary & synthetic health checks passed (100%)',
-      'No IaC or database modifications'
+      'No IaC or database modifications',
     ],
     recommendation: 'PROCEED',
-    stagedCommit: 'e9a441b - chore: upgrade styling tokens and brand assets'
-  }
+    stagedCommit: 'e9a441b - chore: upgrade styling tokens and brand assets',
+  },
 ];
 
 export const DeploymentsGuardianView: React.FC<DeploymentsGuardianViewProps> = ({
   onAskAI,
-  onApproveDeployment
+  onApproveDeployment,
 }) => {
   const [selectedDep, setSelectedDep] = useState<DeploymentRiskRecord>(mockDeployments[0]);
   const [approvalStatus, setApprovalStatus] = useState<Record<string, string>>({
-    'dep-9821': 'PENDING_REVIEW'
+    'dep-9821': 'PENDING_REVIEW',
   });
 
   const handleApprove = (id: string) => {
-    setApprovalStatus(prev => ({ ...prev, [id]: 'APPROVED_AND_QUEUED' }));
+    setApprovalStatus((prev) => ({ ...prev, [id]: 'APPROVED_AND_QUEUED' }));
     if (onApproveDeployment) onApproveDeployment(id);
   };
 
   const handleReject = (id: string) => {
-    setApprovalStatus(prev => ({ ...prev, [id]: 'REJECTED_BY_POLICY' }));
+    setApprovalStatus((prev) => ({ ...prev, [id]: 'REJECTED_BY_POLICY' }));
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#0b0f17] text-slate-200 overflow-hidden font-mono text-xs">
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#0a0d14',
+        color: '#f1f5f9',
+        overflow: 'hidden',
+        fontFamily: 'var(--font-mono)',
+        fontSize: '12px',
+      }}
+    >
       {/* Preview Banner */}
-      <div className="px-6 py-2 bg-amber-500/[0.06] border-b border-amber-500/30 text-amber-400 text-[11px] font-semibold font-sans">
+      <div
+        style={{
+          padding: '8px 20px',
+          backgroundColor: 'rgba(245, 158, 11, 0.08)',
+          borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
+          color: '#fbbf24',
+          fontSize: '11px',
+          fontFamily: 'var(--font-sans)',
+          fontWeight: 600,
+        }}
+      >
         Preview — Deployment risk analysis backend is v0.2 scope. Data below is illustrative.
       </div>
 
       {/* Top Banner */}
-      <div className="border-b border-slate-800 bg-[#0d131f] px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400">
+      <div
+        style={{
+          borderBottom: '1px solid #1a2234',
+          backgroundColor: '#0d1320',
+          padding: '14px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              padding: '8px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              color: '#fbbf24',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <ShieldAlert size={20} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-slate-100 tracking-wide">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h1
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#f8fafc',
+                  letterSpacing: '0.5px',
+                  margin: 0,
+                }}
+              >
                 AI DEPLOYMENT GUARDIAN
               </h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span
+                style={{
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                  color: '#fde68a',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                }}
+              >
                 PREVIEW
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5 font-sans">
+            <p
+              style={{
+                fontSize: '11px',
+                color: '#94a3b8',
+                fontFamily: 'var(--font-sans)',
+                marginTop: '3px',
+                margin: 0,
+              }}
+            >
               Evaluates code changes, Terraform, database migrations, security CVEs & reliability before production rollout.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => onAskAI?.(`Evaluate deployment risk for ${selectedDep.serviceName} ${selectedDep.version}`)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition"
-          >
-            <Sparkles size={13} />
-            Ask AI to Deep-Scan Diff
-          </button>
-        </div>
+        <button
+          onClick={() =>
+            onAskAI?.(
+              `Evaluate deployment risk for ${selectedDep.serviceName} ${selectedDep.version}`
+            )
+          }
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '7px 14px',
+            borderRadius: '6px',
+            backgroundColor: '#4f46e5',
+            color: '#ffffff',
+            fontWeight: 700,
+            fontSize: '11px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'background-color 0.15s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#4338ca')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#4f46e5')}
+        >
+          <Sparkles size={13} />
+          Ask AI to Deep-Scan Diff
+        </button>
       </div>
 
       {/* Main Content: Split Grid */}
-      <div className="flex-1 grid grid-cols-12 overflow-hidden">
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left Column: Deployment Pipeline Queue */}
-        <div className="col-span-4 border-r border-slate-800 flex flex-col bg-[#0e1422] overflow-y-auto">
-          <div className="px-4 py-3 border-b border-slate-800/80 bg-slate-900/60 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+        <div
+          style={{
+            width: '340px',
+            borderRight: '1px solid #1a2234',
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#0c111c',
+            overflowY: 'auto',
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              padding: '12px 16px',
+              borderBottom: '1px solid #1a2234',
+              backgroundColor: '#090d16',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '10px',
+              fontWeight: 700,
+              color: '#64748b',
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+            }}
+          >
             <span>STAGED DEPLOYMENTS ({mockDeployments.length})</span>
             <span>BLAST RADIUS</span>
           </div>
 
-          <div className="divide-y divide-slate-800/60">
-            {mockDeployments.map(dep => {
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {mockDeployments.map((dep) => {
               const isSelected = selectedDep.deploymentId === dep.deploymentId;
               const status = approvalStatus[dep.deploymentId] || 'PENDING';
               return (
                 <div
                   key={dep.deploymentId}
                   onClick={() => setSelectedDep(dep)}
-                  className={`p-4 cursor-pointer transition border-l-2 ${
-                    isSelected
-                      ? 'bg-slate-800/60 border-indigo-500 text-slate-100'
-                      : 'border-transparent hover:bg-slate-800/30 text-slate-300'
-                  }`}
+                  style={{
+                    padding: '14px 16px',
+                    cursor: 'pointer',
+                    transition: 'all 0.12s ease',
+                    borderLeft: isSelected ? '3px solid #6366f1' : '3px solid transparent',
+                    borderBottom: '1px solid #141b2b',
+                    backgroundColor: isSelected ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-200">{dep.serviceName}</span>
-                      <span className="px-1.5 py-0.5 rounded bg-slate-800 text-[10px] text-slate-400">
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 700, color: '#f1f5f9' }}>{dep.serviceName}</span>
+                      <span
+                        style={{
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          backgroundColor: '#1e293b',
+                          fontSize: '10px',
+                          color: '#94a3b8',
+                        }}
+                      >
                         {dep.version}
                       </span>
                     </div>
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        dep.classification === 'HIGH'
-                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                          : dep.classification === 'MEDIUM'
-                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                      }`}
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        backgroundColor:
+                          dep.classification === 'HIGH'
+                            ? 'rgba(239, 68, 68, 0.15)'
+                            : dep.classification === 'MEDIUM'
+                            ? 'rgba(245, 158, 11, 0.15)'
+                            : 'rgba(16, 185, 129, 0.15)',
+                        color:
+                          dep.classification === 'HIGH'
+                            ? '#f87171'
+                            : dep.classification === 'MEDIUM'
+                            ? '#fbbf24'
+                            : '#34d399',
+                        border:
+                          dep.classification === 'HIGH'
+                            ? '1px solid rgba(239, 68, 68, 0.3)'
+                            : dep.classification === 'MEDIUM'
+                            ? '1px solid rgba(245, 158, 11, 0.3)'
+                            : '1px solid rgba(16, 185, 129, 0.3)',
+                      }}
                     >
                       {dep.classification} ({dep.overallRisk}/100)
                     </span>
                   </div>
 
-                  <div className="mt-2 text-[11px] text-slate-400 flex items-center gap-1.5 truncate">
-                    <GitCommit size={12} className="text-slate-500 shrink-0" />
-                    <span className="truncate">{dep.stagedCommit}</span>
+                  <div
+                    style={{
+                      marginTop: '8px',
+                      fontSize: '11px',
+                      color: '#94a3b8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <GitCommit size={12} color="#64748b" style={{ flexShrink: 0 }} />
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {dep.stagedCommit}
+                    </span>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between text-[10px]">
-                    <span className="text-slate-500">Decision:</span>
+                  <div
+                    style={{
+                      marginTop: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '10px',
+                    }}
+                  >
+                    <span style={{ color: '#64748b' }}>Decision:</span>
                     <span
-                      className={`font-semibold ${
-                        status === 'APPROVED_AND_QUEUED'
-                          ? 'text-emerald-400'
-                          : status === 'REJECTED_BY_POLICY'
-                          ? 'text-red-400'
-                          : 'text-amber-400'
-                      }`}
+                      style={{
+                        fontWeight: 700,
+                        color:
+                          status === 'APPROVED_AND_QUEUED'
+                            ? '#34d399'
+                            : status === 'REJECTED_BY_POLICY'
+                            ? '#f87171'
+                            : '#fbbf24',
+                      }}
                     >
                       {status}
                     </span>
@@ -201,150 +365,296 @@ export const DeploymentsGuardianView: React.FC<DeploymentsGuardianViewProps> = (
         </div>
 
         {/* Right Column: In-Depth Blast Radius & AI Evaluation */}
-        <div className="col-span-8 flex flex-col bg-[#0b0f17] overflow-y-auto p-6 space-y-6">
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#0a0d14',
+            overflowY: 'auto',
+            padding: '24px',
+            gap: '20px',
+          }}
+        >
           {/* Header Card */}
-          <div className="border border-slate-800 rounded-lg p-5 bg-[#0f1626] shadow-sm">
-            <div className="flex items-start justify-between">
+          <div
+            style={{
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              padding: '20px',
+              backgroundColor: '#0d1320',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
               <div>
-                <div className="flex items-center gap-2 text-[11px] text-indigo-400 font-semibold uppercase tracking-wider">
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '10px',
+                    color: '#818cf8',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                  }}
+                >
                   <Activity size={13} />
                   Pre-Flight Verification Profile
                 </div>
-                <div className="text-xl font-bold text-slate-100 mt-1 flex items-center gap-3">
+                <div
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#f8fafc',
+                    marginTop: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                  }}
+                >
                   <span>{selectedDep.serviceName}</span>
-                  <span className="text-sm font-normal px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: '#1e293b',
+                      color: '#cbd5e1',
+                    }}
+                  >
                     {selectedDep.version}
                   </span>
-                  <span className="text-xs font-mono text-slate-500">({selectedDep.deploymentId})</span>
+                  <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: '#64748b' }}>
+                    ({selectedDep.deploymentId})
+                  </span>
                 </div>
-                <div className="text-xs text-slate-400 mt-1 font-sans">
-                  Target: <span className="font-mono text-slate-300">prod-eks-us-east-1</span> (Namespace:{' '}
-                  <span className="font-mono text-slate-300">production</span>)
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px', fontFamily: 'var(--font-sans)' }}>
+                  Target: <span style={{ fontFamily: 'var(--font-mono)', color: '#e2e8f0' }}>prod-eks-us-east-1</span> (Namespace:{' '}
+                  <span style={{ fontFamily: 'var(--font-mono)', color: '#e2e8f0' }}>production</span>)
                 </div>
               </div>
 
-              <div className="text-right">
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">Overall Risk Score</div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Overall Risk Score
+                </div>
                 <div
-                  className={`text-3xl font-black mt-0.5 ${
-                    selectedDep.overallRisk >= 75
-                      ? 'text-red-400'
-                      : selectedDep.overallRisk >= 40
-                      ? 'text-amber-400'
-                      : 'text-emerald-400'
-                  }`}
+                  style={{
+                    fontSize: '28px',
+                    fontWeight: 900,
+                    marginTop: '2px',
+                    color:
+                      selectedDep.overallRisk >= 75
+                        ? '#f87171'
+                        : selectedDep.overallRisk >= 40
+                        ? '#fbbf24'
+                        : '#34d399',
+                  }}
                 >
                   {selectedDep.overallRisk}
-                  <span className="text-xs text-slate-500 font-normal"> / 100</span>
+                  <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}> / 100</span>
                 </div>
-                <div className="text-[11px] font-bold text-slate-300 mt-0.5">
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#cbd5e1', marginTop: '2px' }}>
                   CLASSIFICATION: {selectedDep.classification}
                 </div>
               </div>
             </div>
 
             {/* Score Grid */}
-            <div className="grid grid-cols-4 gap-4 mt-6 pt-5 border-t border-slate-800/80">
-              <div className="bg-slate-900/80 p-3 rounded border border-slate-800">
-                <div className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                  <ShieldAlert size={12} className="text-red-400" />
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '14px',
+                marginTop: '20px',
+                paddingTop: '16px',
+                borderTop: '1px solid #1a2234',
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: '#090d16',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #1e293b',
+                }}
+              >
+                <div style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldAlert size={12} color="#f87171" />
                   Security Risk
                 </div>
-                <div className="text-lg font-bold text-slate-100 mt-1">{selectedDep.securityScore}%</div>
-                <div className="w-full bg-slate-800 h-1 rounded-full mt-2 overflow-hidden">
-                  <div
-                    className="bg-red-500 h-full rounded-full"
-                    style={{ width: `${selectedDep.securityScore}%` }}
-                  />
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9', marginTop: '4px' }}>
+                  {selectedDep.securityScore}%
+                </div>
+                <div style={{ width: '100%', backgroundColor: '#1e293b', height: '4px', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
+                  <div style={{ backgroundColor: '#ef4444', height: '100%', width: `${selectedDep.securityScore}%` }} />
                 </div>
               </div>
 
-              <div className="bg-slate-900/80 p-3 rounded border border-slate-800">
-                <div className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                  <Server size={12} className="text-amber-400" />
+              <div
+                style={{
+                  backgroundColor: '#090d16',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #1e293b',
+                }}
+              >
+                <div style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Server size={12} color="#fbbf24" />
                   Infrastructure Risk
                 </div>
-                <div className="text-lg font-bold text-slate-100 mt-1">{selectedDep.infraScore}%</div>
-                <div className="w-full bg-slate-800 h-1 rounded-full mt-2 overflow-hidden">
-                  <div
-                    className="bg-amber-500 h-full rounded-full"
-                    style={{ width: `${selectedDep.infraScore}%` }}
-                  />
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9', marginTop: '4px' }}>
+                  {selectedDep.infraScore}%
+                </div>
+                <div style={{ width: '100%', backgroundColor: '#1e293b', height: '4px', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
+                  <div style={{ backgroundColor: '#f59e0b', height: '100%', width: `${selectedDep.infraScore}%` }} />
                 </div>
               </div>
 
-              <div className="bg-slate-900/80 p-3 rounded border border-slate-800">
-                <div className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                  <Activity size={12} className="text-indigo-400" />
+              <div
+                style={{
+                  backgroundColor: '#090d16',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #1e293b',
+                }}
+              >
+                <div style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Activity size={12} color="#818cf8" />
                   Reliability Risk
                 </div>
-                <div className="text-lg font-bold text-slate-100 mt-1">{selectedDep.reliabilityScore}%</div>
-                <div className="w-full bg-slate-800 h-1 rounded-full mt-2 overflow-hidden">
-                  <div
-                    className="bg-indigo-500 h-full rounded-full"
-                    style={{ width: `${selectedDep.reliabilityScore}%` }}
-                  />
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9', marginTop: '4px' }}>
+                  {selectedDep.reliabilityScore}%
+                </div>
+                <div style={{ width: '100%', backgroundColor: '#1e293b', height: '4px', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
+                  <div style={{ backgroundColor: '#6366f1', height: '100%', width: `${selectedDep.reliabilityScore}%` }} />
                 </div>
               </div>
 
-              <div className="bg-slate-900/80 p-3 rounded border border-slate-800">
-                <div className="text-[10px] text-slate-400 flex items-center gap-1.5">
-                  <Layers size={12} className="text-purple-400" />
+              <div
+                style={{
+                  backgroundColor: '#090d16',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #1e293b',
+                }}
+              >
+                <div style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={12} color="#c084fc" />
                   Blast Radius
                 </div>
-                <div className="text-lg font-bold text-slate-100 mt-1">{selectedDep.blastRadiusScore}%</div>
-                <div className="w-full bg-slate-800 h-1 rounded-full mt-2 overflow-hidden">
-                  <div
-                    className="bg-purple-500 h-full rounded-full"
-                    style={{ width: `${selectedDep.blastRadiusScore}%` }}
-                  />
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#f1f5f9', marginTop: '4px' }}>
+                  {selectedDep.blastRadiusScore}%
+                </div>
+                <div style={{ width: '100%', backgroundColor: '#1e293b', height: '4px', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
+                  <div style={{ backgroundColor: '#a855f7', height: '100%', width: `${selectedDep.blastRadiusScore}%` }} />
                 </div>
               </div>
             </div>
           </div>
 
           {/* AI Guardian Reasons & Evidence */}
-          <div className="border border-slate-800 rounded-lg p-5 bg-[#0f1626]">
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-              <Sparkles size={14} className="text-indigo-400" />
+          <div
+            style={{
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              padding: '20px',
+              backgroundColor: '#0d1320',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontWeight: 700, color: '#f1f5f9' }}>
+              <Sparkles size={14} color="#818cf8" />
               AI GUARDIAN BLAST RADIUS ANALYSIS & REASONS
             </div>
 
-            <div className="mt-4 space-y-2.5">
+            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {selectedDep.reasons.map((reason, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-2.5 p-3 rounded bg-slate-900/60 border border-slate-800/80 text-slate-300"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    padding: '12px 14px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+                    border: '1px solid #1e293b',
+                    color: '#cbd5e1',
+                  }}
                 >
-                  <AlertTriangle size={14} className="text-amber-400 shrink-0 mt-0.5" />
-                  <span className="font-sans text-xs leading-relaxed">{reason}</span>
+                  <AlertTriangle size={14} color="#fbbf24" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', lineHeight: 1.5 }}>{reason}</span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 p-4 rounded bg-indigo-950/20 border border-indigo-500/30 flex items-center justify-between">
+            <div
+              style={{
+                marginTop: '16px',
+                padding: '16px',
+                borderRadius: '6px',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                border: '1px solid rgba(99, 102, 241, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
               <div>
-                <div className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider">
+                <div
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    color: '#a5b4fc',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                  }}
+                >
                   AI RECOMMENDATION
                 </div>
-                <div className="text-sm font-bold text-slate-100 mt-0.5">
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#f1f5f9', marginTop: '2px' }}>
                   {selectedDep.recommendation}
                 </div>
-                <div className="text-[11px] text-slate-400 mt-0.5 font-sans">
-                  Policy requires human approval before releasing to tier <span className="font-mono text-slate-300">Production</span>.
+                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px', fontFamily: 'var(--font-sans)' }}>
+                  Policy requires human approval before releasing to tier <span style={{ fontFamily: 'var(--font-mono)', color: '#cbd5e1' }}>Production</span>.
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <button
                   onClick={() => handleReject(selectedDep.deploymentId)}
-                  className="px-3 py-1.5 rounded border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition font-semibold"
+                  style={{
+                    padding: '7px 14px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    color: '#f87171',
+                    fontWeight: 600,
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                  }}
                 >
                   Reject & Halt
                 </button>
                 <button
                   onClick={() => handleApprove(selectedDep.deploymentId)}
-                  className="px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white transition font-semibold flex items-center gap-1.5 shadow-lg shadow-emerald-950"
+                  style={{
+                    padding: '7px 16px',
+                    borderRadius: '6px',
+                    backgroundColor: '#059669',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '11px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
+                  }}
                 >
                   <CheckCircle2 size={13} />
                   Authorize Release
@@ -354,22 +664,44 @@ export const DeploymentsGuardianView: React.FC<DeploymentsGuardianViewProps> = (
           </div>
 
           {/* Staged Artifacts & Diff */}
-          <div className="border border-slate-800 rounded-lg p-5 bg-[#0f1626]">
-            <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-              <div className="flex items-center gap-2">
-                <FileCode size={14} className="text-cyan-400" />
+          <div
+            style={{
+              border: '1px solid #1e293b',
+              borderRadius: '8px',
+              padding: '20px',
+              backgroundColor: '#0d1320',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#f1f5f9' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileCode size={14} color="#38bdf8" />
                 STAGED DIFF & MIGRATION SCRIPT
               </div>
-              <span className="text-[10px] text-slate-500 font-mono">commit: {selectedDep.stagedCommit.split(' ')[0]}</span>
+              <span style={{ fontSize: '10px', color: '#64748b', fontFamily: 'var(--font-mono)' }}>
+                commit: {selectedDep.stagedCommit.split(' ')[0]}
+              </span>
             </div>
 
-            <div className="mt-3 p-3 rounded bg-[#070a0f] border border-slate-800 font-mono text-[11px] text-slate-300 overflow-x-auto">
-              <div className="text-slate-500">// migrations/20260905_add_status_code.sql</div>
-              <div className="text-emerald-400">+ ALTER TABLE transactions ADD COLUMN status_code VARCHAR(32) DEFAULT 'PENDING';</div>
-              <div className="text-emerald-400">+ CREATE INDEX idx_trans_status ON transactions(status_code);</div>
-              <div className="text-slate-500 mt-2">// src/services/checkout.ts</div>
-              <div className="text-red-400">{`- const pool = new PgPool({ max: 20 });`}</div>
-              <div className="text-emerald-400">{`+ const pool = new PgPool({ max: 80, idleTimeoutMillis: 10000 });`}</div>
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '14px',
+                borderRadius: '6px',
+                backgroundColor: '#05080f',
+                border: '1px solid #1a2234',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '11px',
+                color: '#cbd5e1',
+                overflowX: 'auto',
+                lineHeight: 1.6,
+              }}
+            >
+              <div style={{ color: '#64748b' }}>// migrations/20260905_add_status_code.sql</div>
+              <div style={{ color: '#34d399' }}>+ ALTER TABLE transactions ADD COLUMN status_code VARCHAR(32) DEFAULT 'PENDING';</div>
+              <div style={{ color: '#34d399' }}>+ CREATE INDEX idx_trans_status ON transactions(status_code);</div>
+              <div style={{ color: '#64748b', marginTop: '8px' }}>// src/services/checkout.ts</div>
+              <div style={{ color: '#f87171' }}>- const pool = new PgPool({`{ max: 20 }`});</div>
+              <div style={{ color: '#34d399' }}>+ const pool = new PgPool({`{ max: 80, idleTimeoutMillis: 10000 }`});</div>
             </div>
           </div>
         </div>

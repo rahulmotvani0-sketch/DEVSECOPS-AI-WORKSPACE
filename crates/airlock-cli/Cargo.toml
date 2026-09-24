@@ -10,6 +10,11 @@ airlock-k8s = { path = "../airlock-k8s" }
 airlock-prom = { path = "../airlock-prom" }
 airlock-pty = { path = "../airlock-pty" }
 airlock-ai = { path = "../airlock-ai" }
+airlock-providers = { path = "../airlock-providers" }
+airlock-rag = { path = "../airlock-rag" }
+airlock-conn = { path = "../airlock-conn" }
+airlock-discovery = { path = "../airlock-discovery" }
+airlock-topology = { path = "../airlock-topology" }
 clap.workspace = true
 tokio.workspace = true
 serde.workspace = true

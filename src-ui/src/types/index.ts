@@ -230,8 +230,12 @@ export interface WorkloadMetricsSummary {
 export type DevSecOpsView =
   | 'overview'
   | 'ai-workspace'
+  | 'terminal'
   | 'incidents'
   | 'kubernetes'
+  | 'topology'
+  | 'connections'
+  | 'vault'
   | 'deployments'
   | 'security'
   | 'infrastructure'
@@ -316,3 +320,277 @@ export interface TopologyNode {
   y: number;
   status: 'online' | 'degraded' | 'offline';
 }
+
+// --- Connections Types (SSH / Telnet / Serial + SFTP) ---
+
+export type ConnectionKind = 'ssh' | 'telnet' | 'serial';
+export type AuthMethod = 'password' | 'publickey';
+
+export interface SavedConnection {
+  id: string;
+  name: string;
+  kind: ConnectionKind;
+  address: string;
+  port: number;
+  username?: string | null;
+  baud_rate?: number | null;
+  env_tier: EnvironmentTier;
+  auth_method: AuthMethod;
+  identity_path?: string | null;
+}
+
+export interface CatalogSnapshot {
+  entries: SavedConnection[];
+  path: string;
+}
+
+export interface HostKeyProbe {
+  host: string;
+  port: number;
+  fingerprint: string;
+  raw_key_base64: string;
+}
+
+export interface SftpEntry {
+  name: string;
+  is_dir: boolean;
+  size: number;
+}
+
+// --- Credential Vault & Key Store Types ---
+
+export type SecretKind =
+  | 'password'
+  | 'ssh_key'
+  | 'api_token'
+  | 'certificate'
+  | 'cloud_credential'
+  | 'other';
+
+export interface VaultSecretMetadata {
+  id: string;
+  name: string;
+  kind: SecretKind;
+  service: string;
+  username?: string | null;
+  env_tier: EnvironmentTier;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StoreVaultSecretRequest {
+  id?: string | null;
+  name: string;
+  kind: SecretKind;
+  service: string;
+  username?: string | null;
+  env_tier: EnvironmentTier;
+  secret_value: string;
+  tags: string[];
+}
+
+export interface VaultStatus {
+  locked: boolean;
+  active_vault: string;
+  cipher: string;
+  secrets_count: number;
+}
+
+// --- AI Desktop Integration Types (Step 4/5) ---
+
+export type ProviderKind =
+  | 'ollama'
+  | 'vllm'
+  | 'anthropic'
+  | 'openai'
+  | 'bedrock'
+  | 'vertex'
+  | 'deepseek'
+  | 'groq'
+  | 'together'
+  | 'fireworks'
+  | 'mistral'
+  | 'custom';
+
+export interface ProviderInfo {
+  id: string;
+  name: string;
+  kind: ProviderKind;
+  is_local: boolean;
+  default_model: string;
+  configured: boolean;
+  implemented: boolean;
+}
+
+export interface ProviderConfig {
+  id: string;
+  kind: ProviderKind;
+  base_url?: string | null;
+  api_key_ref?: string | null;
+  model: string;
+}
+
+export interface BuildResult {
+  provider_id: string;
+  model: string;
+}
+
+export interface OllamaStatus {
+  installed: boolean;
+  running: boolean;
+  managed: boolean;
+  version?: string | null;
+  detail: string;
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  source: string;
+  content: string;
+  created_at: string;
+  chunk_count: number;
+}
+
+export interface RetrievalResult {
+  chunk_id: string;
+  document_title: string;
+  text: string;
+  score: number;
+  embedding_kind: string;
+}
+
+export interface ToolProposal {
+  id: string;
+  task_id: string;
+  tool: string;
+  description: string;
+  command?: string;
+  action_command?: string;
+  environment?: string;
+  proposed_at?: string;
+  status: 'not_executed' | 'approved_and_executed' | 'rejected' | 'NotExecuted' | 'ApprovedAndExecuted' | 'Rejected' | 'AutoExecutedRead' | string;
+  outcome?: { output: string; success: boolean } | null;
+  created_at?: string;
+  approved_at?: string | null;
+  result?: string | null;
+  error_log?: string | null;
+}
+
+export interface AgentTask {
+  id: string;
+  goal: string;
+  env: string;
+  status: string;
+  proposals: ToolProposal[];
+  created_at: string;
+}
+
+export interface AgentTaskStatus {
+  task_id: string;
+  status: string;
+  pending_proposals: number;
+  executed_proposals: number;
+}
+
+// --- Discovery & Topology Types ---
+
+export interface DiscoverySourceInfo {
+  id: string;
+  label: string;
+  description: string;
+  available: boolean;
+}
+
+export type AssetKind =
+  | 'usb_device'
+  | 'pci_device'
+  | 'network_interface'
+  | 'serial_device'
+  | 'kubernetes'
+  | 'cloud'
+  | 'iac'
+  | 'image'
+  | 'pipeline'
+  | 'secret';
+
+export type EdgeKind =
+  | 'parent_child'
+  | 'network_link'
+  | 'usb_bus'
+  | 'serial_chain'
+  | 'pci_bridge'
+  | 'depends_on'
+  | 'iam_trust'
+  | 'data_flow';
+
+export interface DiscoveredAsset {
+  id: string;
+  kind: AssetKind;
+  identity: string;
+  attributes: Record<string, any>;
+  source: string;
+  first_seen: string;
+  last_seen: string;
+}
+
+export interface DiscoveredEdge {
+  from_asset: string;
+  to_asset: string;
+  kind: EdgeKind;
+  evidence: string;
+}
+
+export interface DiscoveryRun {
+  id: string;
+  source: string;
+  scope: string;
+  status: 'succeeded' | 'skipped' | 'failed';
+  started_at: string;
+  finished_at: string;
+  assets: DiscoveredAsset[];
+  edges: DiscoveredEdge[];
+  findings?: Finding[];
+  note?: string | null;
+}
+
+export interface TopologyGraphData {
+  assets: DiscoveredAsset[];
+  edges: DiscoveredEdge[];
+}
+
+export interface BlastRadiusReport {
+  root_asset_id: string;
+  impacted: DiscoveredAsset[];
+  paths: DiscoveredEdge[][];
+}
+
+// --- Security Findings & Copilot Toolbridge Types ---
+
+export type FindingCategory = 'vulnerability' | 'compliance' | 'exposure' | 'drift';
+export type SignalSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
+
+export interface Finding {
+  id: string;
+  asset_id: string;
+  title: string;
+  category: FindingCategory;
+  severity: SignalSeverity;
+  source: string;
+  evidence: string;
+  remediation?: string | null;
+  status: string; // 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'ACCEPTED'
+  created_at: string;
+}
+
+export interface ToolResult {
+  tool: string;
+  success: boolean;
+  summary: string;
+  data: any;
+  proposal?: ToolProposal | null;
+  executed_at: string;
+}
+
+

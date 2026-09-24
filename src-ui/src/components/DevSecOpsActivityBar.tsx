@@ -12,6 +12,10 @@ import {
   Bot,
   Settings,
   Shield,
+  Network,
+  KeyRound,
+  Boxes,
+  Sparkles,
 } from 'lucide-react';
 import { DevSecOpsView } from '../types';
 
@@ -38,9 +42,13 @@ export const DevSecOpsActivityBar: React.FC<DevSecOpsActivityBarProps> = ({
 }) => {
   const navItems = [
     { id: 'overview' as DevSecOpsView, icon: LayoutDashboard, label: 'Overview & Health' },
-    { id: 'ai-workspace' as DevSecOpsView, icon: Terminal, label: 'AI Workspace & Terminal' },
+    { id: 'ai-workspace' as DevSecOpsView, icon: Sparkles, label: 'AI Investigation Canvas' },
+    { id: 'terminal' as DevSecOpsView, icon: Terminal, label: 'PTY Terminal Workspace (Multi-Pane)' },
     { id: 'incidents' as DevSecOpsView, icon: AlertOctagon, label: 'SRE Incidents & RCA', badge: activeIncidentCount, badgeColor: '#ef4444' },
     { id: 'kubernetes' as DevSecOpsView, icon: Layers, label: 'Kubernetes Workloads' },
+    { id: 'topology' as DevSecOpsView, icon: Boxes, label: 'Estate Topology & Discovery' },
+    { id: 'connections' as DevSecOpsView, icon: Network, label: 'Remote Bastions & Connections (SSH/SFTP)' },
+    { id: 'vault' as DevSecOpsView, icon: KeyRound, label: 'Credential Vault & Key Store' },
     { id: 'deployments' as DevSecOpsView, icon: Rocket, label: 'Deployments Guardian', badge: deploymentRiskCount, badgeColor: '#f59e0b' },
     { id: 'security' as DevSecOpsView, icon: ShieldAlert, label: 'DevSecOps Security', badge: securityFindingCount, badgeColor: '#38bdf8' },
     { id: 'infrastructure' as DevSecOpsView, icon: FileCode2, label: 'IaC & Terraform Reviewer' },

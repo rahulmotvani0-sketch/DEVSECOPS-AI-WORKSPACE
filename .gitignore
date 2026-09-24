@@ -27,3 +27,5 @@ dist/
 .DS_Store
 *.tmp
 *.bak
+*-old
+Claude outputs/

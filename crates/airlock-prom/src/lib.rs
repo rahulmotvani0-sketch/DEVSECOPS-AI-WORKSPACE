@@ -776,7 +776,7 @@ impl PrometheusIntegration {
     fn sanitize_query_result(&self, result: &mut QueryResult) {
         let mut any_redacted = false;
         for series in &mut result.series {
-            for (_, val) in series.labels.iter_mut() {
+            for val in series.labels.values_mut() {
                 let (clean, dirty) = ContextEngine::redact_secrets(val);
                 if dirty {
                     *val = clean;

@@ -20,50 +20,66 @@ export const DevSecOpsStatusBar: React.FC<DevSecOpsStatusBarProps> = ({
   onOpenSecurity
 }) => {
   return (
-    <footer className="h-6 bg-[#07090e] border-t border-slate-800/80 flex items-center justify-between px-3 text-[11px] text-slate-400 select-none shrink-0 font-mono z-30">
+    <footer
+      style={{
+        height: '24px',
+        backgroundColor: '#07090e',
+        borderTop: '1px solid rgba(51, 65, 85, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 12px',
+        fontSize: '11px',
+        color: '#94a3b8',
+        userSelect: 'none',
+        flexShrink: 0,
+        fontFamily: 'monospace',
+        zIndex: 30
+      }}
+    >
       {/* Left items */}
-      <div className="flex items-center gap-4">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         {/* Repo & Branch */}
-        <div className="flex items-center gap-1.5 text-slate-300">
-          <GitBranch size={11} className="text-slate-400" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#cbd5e1' }}>
+          <GitBranch size={11} style={{ color: '#94a3b8' }} />
           <span>checkout-service</span>
-          <span className="text-slate-500">/</span>
-          <span className="text-indigo-400 font-semibold">main</span>
-          <Lock size={10} className="text-slate-500 ml-0.5" />
+          <span style={{ color: '#64748b' }}>/</span>
+          <span style={{ color: '#818cf8', fontWeight: 600 }}>main</span>
+          <Lock size={10} style={{ color: '#64748b', marginLeft: '2px' }} />
         </div>
 
         {/* Cluster Context */}
-        <div className="flex items-center gap-1 text-slate-400">
-          <span className="text-slate-600">|</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          <span className="text-slate-300">prod-eks-us-east-1</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#94a3b8' }}>
+          <span style={{ color: '#475569' }}>|</span>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#10b981' }} />
+          <span style={{ color: '#cbd5e1' }}>prod-eks-us-east-1</span>
         </div>
 
         {/* Incidents & Security Counter */}
-        <div className="flex items-center gap-3">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div
             onClick={onOpenIncidents}
-            className="flex items-center gap-1 text-red-400 cursor-pointer hover:text-red-300 transition"
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#f87171', cursor: 'pointer' }}
             title="1 Active Incident"
           >
             <XCircle size={11} />
-            <span className="font-bold">1 Incident</span>
+            <span style={{ fontWeight: 700 }}>1 Incident</span>
           </div>
 
           <div
             onClick={onOpenSecurity}
-            className="flex items-center gap-1 text-amber-400 cursor-pointer hover:text-amber-300 transition"
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#fbbf24', cursor: 'pointer' }}
             title="3 Open CVEs"
           >
             <AlertTriangle size={11} />
-            <span className="font-bold">3 Vulnerabilities</span>
+            <span style={{ fontWeight: 700 }}>3 Vulnerabilities</span>
           </div>
         </div>
 
         {/* Policy Engine Status */}
         <div
           onClick={onOpenAudit}
-          className="flex items-center gap-1 text-emerald-400 cursor-pointer hover:text-emerald-300 transition"
+          style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10b981', cursor: 'pointer' }}
           title="Policy Engine Active"
         >
           <ShieldCheck size={12} />
@@ -72,16 +88,16 @@ export const DevSecOpsStatusBar: React.FC<DevSecOpsStatusBarProps> = ({
       </div>
 
       {/* Right items */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 text-slate-300">
-          <Cpu size={12} className="text-indigo-400" />
-          <span className="text-[10px] text-slate-400">AI GATEWAY:</span>
-          <span className="text-emerald-400 font-bold">READY</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#cbd5e1' }}>
+          <Cpu size={12} style={{ color: '#818cf8' }} />
+          <span style={{ fontSize: '10px', color: '#94a3b8' }}>AI GATEWAY:</span>
+          <span style={{ color: '#10b981', fontWeight: 700 }}>READY</span>
         </div>
 
-        <span className="text-slate-600">|</span>
+        <span style={{ color: '#475569' }}>|</span>
 
-        <span className="text-slate-400 font-bold tracking-wider">
+        <span style={{ color: '#94a3b8', fontWeight: 700, letterSpacing: '0.05em' }}>
           AIRLOCK v1.0.0
         </span>
       </div>

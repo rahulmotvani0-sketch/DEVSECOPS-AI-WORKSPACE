@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import {
   Activity,
   AlertTriangle,
@@ -216,7 +216,19 @@ export const ObservabilityView: React.FC<ObservabilityViewProps> = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', overflowY: 'auto', paddingRight: '4px' }}>
+    <div
+      style={{
+        flex: 1,
+        backgroundColor: '#0a0d14',
+        color: '#f1f5f9',
+        overflowY: 'auto',
+        padding: '20px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
       {/* 1. Header & Connection Health Bar */}
       <div
         style={{

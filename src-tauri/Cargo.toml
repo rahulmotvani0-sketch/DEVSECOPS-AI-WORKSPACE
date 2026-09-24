@@ -6,12 +6,13 @@ description = "Tauri backend application for Airlock DevSecOps Operations Cockpi
 
 [dependencies]
 airlock-core = { path = "../crates/airlock-core" }
+airlock-conn = { path = "../crates/airlock-conn" }
 airlock-k8s = { path = "../crates/airlock-k8s" }
 airlock-prom = { path = "../crates/airlock-prom" }
 airlock-pty = { path = "../crates/airlock-pty" }
 airlock-ai = { path = "../crates/airlock-ai" }
 airlock-api = { package = "airlock-cli", path = "../crates/airlock-cli" }
-tauri = { version = "1.6", features = ["window-all"] }
+tauri = { version = "2", features = [] }
 tokio = { workspace = true, features = ["full"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
@@ -22,4 +23,4 @@ uuid.workspace = true
 dirs = "5.0"
 
 [build-dependencies]
-tauri-build = { version = "1.5", features = [] }
+tauri-build = { version = "2", features = [] }

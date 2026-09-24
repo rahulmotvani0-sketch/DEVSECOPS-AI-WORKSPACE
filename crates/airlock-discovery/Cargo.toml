@@ -1,0 +1,15 @@
+[package]
+name = "airlock-discovery"
+version = "0.1.0"
+edition = "2021"
+description = "Read-only local device inventory (USB/PCI/network/serial) from sysfs for Airlock"
+
+[dependencies]
+airlock-core = { path = "../airlock-core" }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+libc.workspace = true
+regex.workspace = true

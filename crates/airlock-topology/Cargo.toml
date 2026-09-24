@@ -1,0 +1,14 @@
+[package]
+name = "airlock-topology"
+version = "0.1.0"
+edition = "2021"
+description = "Asset/edge graph over the Airlock discovery inventory: build, auto-link, blast radius"
+
+[dependencies]
+airlock-core = { path = "../airlock-core" }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+anyhow.workspace = true
+
+[dev-dependencies]
+chrono.workspace = true

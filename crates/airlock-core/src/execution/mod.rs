@@ -1,12 +1,40 @@
 use crate::models::{ApprovalStatus, EnvironmentTier, OperationClass};
 use crate::policy::PolicyEngine;
 use anyhow::{bail, Result};
+use serde::{Deserialize, Serialize};
 use std::process::Command;
+
+/// Result of dispatching a command to a target executor.
+///
+/// `success` is the process exit status — it is reported explicitly so callers (and ultimately
+/// the UI) never have to infer success from the output text. A failed command is still returned
+/// as `Ok` so the attempt can be written to the audit ledger; inspect `success` to branch.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ExecutionOutcome {
+    pub output: String,
+    pub success: bool,
+}
+
+impl ExecutionOutcome {
+    pub fn ok(output: impl Into<String>) -> Self {
+        Self {
+            output: output.into(),
+            success: true,
+        }
+    }
+
+    pub fn failed(output: impl Into<String>) -> Self {
+        Self {
+            output: output.into(),
+            success: false,
+        }
+    }
+}
 
 pub trait TargetExecutor: Send + Sync {
     fn name(&self) -> &str;
     fn can_handle(&self, cmd: &str) -> bool;
-    fn execute(&self, cmd: &str) -> Result<String>;
+    fn execute(&self, cmd: &str) -> Result<ExecutionOutcome>;
 }
 
 pub struct ShellCommandExecutor;
@@ -17,19 +45,19 @@ impl TargetExecutor for ShellCommandExecutor {
     fn can_handle(&self, _cmd: &str) -> bool {
         true // Fallback executor
     }
-    fn execute(&self, cmd: &str) -> Result<String> {
+    fn execute(&self, cmd: &str) -> Result<ExecutionOutcome> {
         let output = Command::new("sh").arg("-c").arg(cmd).output()?;
 
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
         let stderr = String::from_utf8_lossy(&output.stderr).to_string();
 
         if output.status.success() {
-            Ok(stdout)
+            Ok(ExecutionOutcome::ok(stdout))
         } else {
-            Ok(format!(
+            Ok(ExecutionOutcome::failed(format!(
                 "Execution Output:\n{}\nStderr:\n{}",
                 stdout, stderr
-            ))
+            )))
         }
     }
 }
@@ -42,7 +70,7 @@ impl TargetExecutor for KubernetesExecutor {
     fn can_handle(&self, cmd: &str) -> bool {
         cmd.trim().starts_with("kubectl") || cmd.trim().starts_with("helm")
     }
-    fn execute(&self, cmd: &str) -> Result<String> {
+    fn execute(&self, cmd: &str) -> Result<ExecutionOutcome> {
         ShellCommandExecutor.execute(cmd)
     }
 }
@@ -55,7 +83,7 @@ impl TargetExecutor for TerraformExecutor {
     fn can_handle(&self, cmd: &str) -> bool {
         cmd.trim().starts_with("terraform") || cmd.trim().starts_with("tofu")
     }
-    fn execute(&self, cmd: &str) -> Result<String> {
+    fn execute(&self, cmd: &str) -> Result<ExecutionOutcome> {
         ShellCommandExecutor.execute(cmd)
     }
 }
@@ -70,7 +98,7 @@ impl TargetExecutor for CloudExecutor {
             || cmd.trim().starts_with("gcloud")
             || cmd.trim().starts_with("az")
     }
-    fn execute(&self, cmd: &str) -> Result<String> {
+    fn execute(&self, cmd: &str) -> Result<ExecutionOutcome> {
         ShellCommandExecutor.execute(cmd)
     }
 }
@@ -83,7 +111,7 @@ impl TargetExecutor for SecurityToolExecutor {
     fn can_handle(&self, cmd: &str) -> bool {
         cmd.trim().starts_with("trivy") || cmd.trim().starts_with("grype")
     }
-    fn execute(&self, cmd: &str) -> Result<String> {
+    fn execute(&self, cmd: &str) -> Result<ExecutionOutcome> {
         ShellCommandExecutor.execute(cmd)
     }
 }
@@ -118,7 +146,7 @@ impl ExecutionEngine {
         _env: &EnvironmentTier,
         action_cmd: &str,
         approval_token: Option<&str>,
-    ) -> Result<(String, ApprovalStatus)> {
+    ) -> Result<(ExecutionOutcome, ApprovalStatus)> {
         let op_class = PolicyEngine::classify_command(action_cmd);
 
         if op_class == OperationClass::Mutate {
@@ -138,13 +166,13 @@ impl ExecutionEngine {
             .find(|e| e.can_handle(action_cmd))
             .ok_or_else(|| anyhow::anyhow!("No suitable target executor found for command"))?;
 
-        let result_text = executor.execute(action_cmd)?;
+        let outcome = executor.execute(action_cmd)?;
         let status = if op_class == OperationClass::Mutate {
             ApprovalStatus::ApprovedAndExecuted
         } else {
             ApprovalStatus::AutoExecutedRead
         };
 
-        Ok((result_text, status))
+        Ok((outcome, status))
     }
 }

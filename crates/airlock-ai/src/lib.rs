@@ -9,6 +9,9 @@ use async_trait::async_trait;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
+pub mod agent;
+pub mod ollama;
+
 #[async_trait]
 pub trait LlmProvider: Send + Sync {
     fn name(&self) -> &str;

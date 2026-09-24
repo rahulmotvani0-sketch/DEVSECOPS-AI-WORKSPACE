@@ -18,7 +18,7 @@ local-first, human-gated AI copilot.
      where it stopped*, what's next. **This is the shared memory.**
    - `CLAUDE.md` — architecture, the trust boundary, and the non-negotiable invariants.
    - The doc relevant to your task (`docs/WIRING_AUDIT.md`, `docs/PRODUCT_BLUEPRINT.md`,
-     `docs/BUILD_KIT_v0.2_EXTENSION.md`, `PRE_LAUNCH_CHECKLIST.md`, `ROADMAP.md`).
+     `docs/BUILD_KIT_v0.2_EXTENSION.md`, `docs/PRE_LAUNCH_CHECKLIST.md`, `docs/ROADMAP.md`).
 2. **Claim your work** — before starting, add/patch an entry under **IN PROGRESS** in
    `docs/PROJECT_STATE.md` (task, files, your agent name). This stops two agents colliding.
 3. **Work in small, verified steps** — one concern per commit; after every change run the
@@ -32,10 +32,12 @@ local-first, human-gated AI copilot.
 
 ```
 cargo fmt --all -- --check
-cargo clippy --workspace --exclude airlock-desktop -- -D warnings
-cargo test --workspace --exclude airlock-desktop
+cargo clippy --workspace -- -D warnings
+cargo test --workspace
 cd src-ui && npm run build && cd ..
 ```
+The desktop crate compiles on this host since the Tauri v2 migration (needs
+`libwebkit2gtk-4.1-dev`, `libjavascriptcoregtk-4.1-dev`, `libsoup-3.0-dev`, `libgtk-3-dev`).
 For UI work, also launch and click through:
 `bash lab/scripts/setup-lab.sh && bash lab/scripts/break-checkout-api.sh && cargo run --package airlock-desktop`
 
@@ -50,7 +52,7 @@ For UI work, also launch and click through:
 
 ## Conventions
 
-- **Tauri v1** arg convention: camelCase JS keys → snake_case Rust (`podName` → `pod_name`).
+- **Tauri arg convention** (v2): camelCase JS keys → snake_case Rust (`podName` → `pod_name`).
 - Conventional Commits (`feat:`/`fix:`/`docs:`…), small and reviewable.
 - No fake data presented as real: no fabricated confidence %, no faked "success" when the
   backend rejected. An honest mock must be labeled a mock/fallback.
@@ -65,8 +67,9 @@ For UI work, also launch and click through:
 | `docs/PRODUCT_BLUEPRINT.md` | v0.2 cockpit spec (screens, sources, tools, data model) |
 | `docs/BUILD_KIT_v0.2_EXTENSION.md` | New crates, IPC, agent roles for v0.2 |
 | `docs/WIRING_AUDIT.md` | UI↔backend wiring status + exact fixes |
-| `ROADMAP.md` | v0.1 → v0.2 → v0.3 direction |
-| `PRE_LAUNCH_CHECKLIST.md` | Path to public launch |
+| `docs/ROADMAP.md` | v0.1 → v0.2 → v0.3 + Production Platform direction |
+| `docs/PRE_LAUNCH_CHECKLIST.md` | Path to public launch |
+| `docs/PROMPT_*.md` | Paste-ready execution briefs: build, verify+polish, take-to-production |
 | `.cursor/rules/airlock.mdc` | Auto-loaded Cursor rules (points to this protocol) |
 | `.antigravity/instructions.md` | Auto-loaded Antigravity rules (points to this protocol) |
 

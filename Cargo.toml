@@ -6,6 +6,11 @@ members = [
     "crates/airlock-prom",
     "crates/airlock-pty",
     "crates/airlock-ai",
+    "crates/airlock-providers",
+    "crates/airlock-rag",
+    "crates/airlock-conn",
+    "crates/airlock-discovery",
+    "crates/airlock-topology",
     "crates/airlock-cli",
     "src-tauri",
 ]
@@ -31,3 +36,10 @@ k8s-openapi = { version = "0.22", features = ["v1_30"] }
 futures = "0.3"
 sha2 = "0.10"
 regex = "1.10"
+russh = "0.63"
+russh-sftp = "2.3"
+ssh-key = "0.6"
+data-encoding = "2.6"
+serialport = { version = "4.10", default-features = false }
+dirs = "5.0"
+libc = "0.2"

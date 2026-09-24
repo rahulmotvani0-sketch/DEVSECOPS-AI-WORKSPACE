@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
+import { Sparkles } from 'lucide-react';
 import { DevSecOpsHeader } from './components/DevSecOpsHeader';
 import { DevSecOpsActivityBar } from './components/DevSecOpsActivityBar';
 import { DevSecOpsOverviewView } from './components/DevSecOpsOverviewView';
@@ -12,7 +13,12 @@ import { InfrastructureIaCView } from './components/InfrastructureIaCView';
 import { ObservabilityView } from './components/ObservabilityView';
 import { CentralWorkspace } from './components/CentralWorkspace';
 import { DevSecOpsCopilotPanel } from './components/DevSecOpsCopilotPanel';
-import { DevSecOpsStatusBar } from './components/DevSecOpsStatusBar';
+import { DevSecOpsAssetTree } from './components/DevSecOpsAssetTree';
+import { ConnectionsView } from './components/ConnectionsView';
+import { VaultView } from './components/VaultView';
+import { TopologyView } from './components/TopologyView';
+import { TerminalView } from './components/TerminalView';
+import { DevSecOpsMetricsStrip } from './components/DevSecOpsMetricsStrip';
 import { AIGatewayModal } from './components/AIGatewayModal';
 import { InlineAIPrompt } from './components/InlineAIPrompt';
 import { ComposerModal } from './components/ComposerModal';
@@ -201,8 +207,9 @@ export const App: React.FC = () => {
     const token = 'EXPLICIT_HUMAN_APPROVED_V1';
     const patchCmd = diagnostic?.action_command || 'kubectl -n default patch deployment checkout-api';
 
+    let outcome: { output: string; success: boolean };
     try {
-      await invoke('execute_action', {
+      outcome = await invoke<{ output: string; success: boolean }>('execute_action', {
         env: currentEnv,
         actionCmd: patchCmd,
         token: token,
@@ -211,7 +218,13 @@ export const App: React.FC = () => {
       const msg = err instanceof Error ? err.message : String(err);
       console.error('execute_action rejected:', msg);
       setExecuteError(msg);
-      return;
+      return false;
+    }
+
+    if (!outcome.success) {
+      console.error('execute_action failed:', outcome.output);
+      setExecuteError(outcome.output || 'Command execution failed.');
+      return false;
     }
 
     setIsPatched(true);
@@ -228,6 +241,8 @@ export const App: React.FC = () => {
         status_state: 'approved_and_executed',
       });
     }
+
+    return true;
   };
 
   const handleSubmitInlinePrompt = (prompt: string) => {
@@ -242,9 +257,13 @@ export const App: React.FC = () => {
     }, 600);
   };
 
-  const handleAcceptInlineDiff = () => {
-    handleExecutePatch();
-    setInlineAIState((prev) => ({ ...prev, isOpen: false, status: 'applied' }));
+  const handleAcceptInlineDiff = async () => {
+    const applied = await handleExecutePatch();
+    setInlineAIState((prev) => ({
+      ...prev,
+      isOpen: false,
+      status: applied ? 'applied' : 'idle',
+    }));
   };
 
   const handleRejectInlineDiff = () => {
@@ -252,7 +271,18 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0a0d13] text-slate-100 overflow-hidden font-sans">
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        width: '100vw',
+        backgroundColor: '#0a0d13',
+        color: '#f1f5f9',
+        overflow: 'hidden',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
       {/* 1. DevSecOps Top Header */}
       <DevSecOpsHeader
         currentCluster={currentCluster}
@@ -268,7 +298,15 @@ export const App: React.FC = () => {
       />
 
       {/* 2. Main Middle Canvas */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          overflow: 'hidden',
+          position: 'relative',
+          minHeight: 0,
+        }}
+      >
         {/* Left 48px Activity Rail */}
         <DevSecOpsActivityBar
           activeView={devsecopsView}
@@ -281,8 +319,31 @@ export const App: React.FC = () => {
           securityFindingCount={4}
         />
 
+        {/* Left Asset Tree: CLUSTERS + TERMINAL (Cosmic / README panel) */}
+        <DevSecOpsAssetTree
+          currentCluster={currentCluster}
+          currentEnv={currentEnv}
+          onSelectCluster={(c) => {
+            setCurrentCluster(c);
+            if (c.includes('prod')) setCurrentEnv('Production');
+            else if (c.includes('staging')) setCurrentEnv('Staging');
+            else setCurrentEnv('Development');
+          }}
+          onSelectView={setDevsecopsView}
+          onRunCopilot={() => {
+            setIsCopilotOpen(true);
+          }}
+        />
+
         {/* Dynamic Center Engineering Workspace */}
-        <div className="flex-1 flex overflow-hidden">
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            overflow: 'hidden',
+            minWidth: 0,
+          }}
+        >
           {devsecopsView === 'overview' && (
             <DevSecOpsOverviewView
               currentEnv={currentEnv}
@@ -304,6 +365,10 @@ export const App: React.FC = () => {
             />
           )}
 
+          {devsecopsView === 'terminal' && (
+            <TerminalView env={currentEnv} />
+          )}
+
           {devsecopsView === 'incidents' && (
             <IncidentsView
               currentEnv={currentEnv}
@@ -316,6 +381,21 @@ export const App: React.FC = () => {
 
           {devsecopsView === 'kubernetes' && (
             <KubernetesExplorer env={currentEnv} />
+          )}
+
+          {devsecopsView === 'topology' && (
+            <TopologyView
+              currentEnv={currentEnv}
+              onAskAI={() => setIsCopilotOpen(true)}
+            />
+          )}
+
+          {devsecopsView === 'connections' && (
+            <ConnectionsView currentEnv={currentEnv} />
+          )}
+
+          {devsecopsView === 'vault' && (
+            <VaultView currentEnv={currentEnv} />
           )}
 
           {devsecopsView === 'deployments' && (
@@ -374,23 +454,47 @@ export const App: React.FC = () => {
           )}
         </div>
 
-        {/* Right DevSecOps Copilot Drawer */}
-        <DevSecOpsCopilotPanel
-          isOpen={isCopilotOpen}
-          env={currentEnv}
-          aiMode={aiMode}
-          onClose={() => setIsCopilotOpen(false)}
-          onOpenSettings={() => setIsAIGatewayOpen(true)}
-          onExecuteCommand={handleExecutePatch}
-        />
+        {/* Right AIRLOCK COPILOT Panel (Cosmic: always present) */}
+        {isCopilotOpen ? (
+          <DevSecOpsCopilotPanel
+            isOpen={true}
+            env={currentEnv}
+            aiMode={aiMode}
+            onClose={() => setIsCopilotOpen(false)}
+            onOpenSettings={() => setIsAIGatewayOpen(true)}
+            onExecuteCommand={handleExecutePatch}
+          />
+        ) : (
+          <button
+            onClick={() => setIsCopilotOpen(true)}
+            title="Open Airlock Copilot (Ctrl+L)"
+            style={{
+              width: 36,
+              flexShrink: 0,
+              border: 'none',
+              borderLeft: '1px solid #1a2232',
+              background: '#0d1320',
+              color: '#34d399',
+              cursor: 'pointer',
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: 1,
+              writingMode: 'vertical-rl',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              userSelect: 'none',
+            }}
+          >
+            <Sparkles size={14} />
+            AIRLOCK COPILOT
+          </button>
+        )}
       </div>
 
-      {/* 3. DevSecOps Bottom Status Bar */}
-      <DevSecOpsStatusBar
-        onOpenAudit={() => setDevsecopsView('audit')}
-        onOpenIncidents={() => setDevsecopsView('incidents')}
-        onOpenSecurity={() => setDevsecopsView('security')}
-      />
+      {/* 3. Bottom Operational Metrics Strip (Cosmic) */}
+      <DevSecOpsMetricsStrip onNavigate={setDevsecopsView} />
 
       {/* 4. AI Gateway & Model Router Modal */}
       <AIGatewayModal

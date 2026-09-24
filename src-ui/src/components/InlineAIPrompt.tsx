@@ -101,6 +101,18 @@ export const InlineAIPrompt: React.FC<InlineAIPromptProps> = ({
           >
             qwen2.5-coder (Local)
           </span>
+          <span
+            style={{
+              padding: '1px 6px',
+              borderRadius: '4px',
+              backgroundColor: 'rgba(245, 158, 11, 0.15)',
+              color: '#fbbf24',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              fontSize: '10px',
+            }}
+          >
+            SIMULATED — backend not wired (v0.2)
+          </span>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

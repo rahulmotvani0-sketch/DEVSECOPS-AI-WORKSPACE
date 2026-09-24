@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import {
   Layers,
   Box,
@@ -235,7 +235,19 @@ export const KubernetesExplorer: React.FC<KubernetesExplorerProps> = ({ env }) =
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+    <div
+      style={{
+        flex: 1,
+        backgroundColor: '#0a0d14',
+        color: '#f1f5f9',
+        overflowY: 'auto',
+        padding: '20px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        fontFamily: 'var(--font-sans)',
+      }}
+    >
       {/* Cluster Header & Read-Only Security Boundary Banner */}
       <div className="card" style={{ borderLeft: '4px solid var(--accent-cyan)' }}>
         <div className="card-header">

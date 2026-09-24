@@ -1,71 +1,51 @@
 {
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Airlock",
+  "version": "0.1.0",
+  "identifier": "io.airlock.cockpit",
   "build": {
     "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:5173",
     "beforeBuildCommand": "npm run build",
-    "devPath": "http://localhost:5173",
-    "distDir": "../src-ui/dist"
+    "frontendDist": "../src-ui/dist"
   },
-  "package": {
-    "productName": "Airlock",
-    "version": "0.1.0"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "window": {
-        "all": true
-      }
-    },
-    "bundle": {
-      "active": true,
-      "category": "DeveloperTool",
-      "copyright": "Airlock Open-Source DevSecOps Operations Cockpit",
-      "deb": {
-        "depends": []
-      },
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "identifier": "io.airlock.cockpit",
-      "longDescription": "Airlock - Open-Source Desktop DevSecOps Operations Cockpit with Local AI Diagnostic Copilot",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "resources": [],
-      "shortDescription": "Airlock Operations Cockpit",
-      "targets": "all",
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      }
-    },
-    "security": {
-      "csp": "default-src 'self' tauri:; style-src 'self' 'unsafe-inline';"
-    },
-    "updater": {
-      "active": false
-    },
+  "app": {
     "windows": [
       {
+        "label": "main",
+        "title": "Airlock — DevSecOps Operations Cockpit",
         "fullscreen": false,
         "height": 920,
         "minHeight": 750,
         "minWidth": 1100,
         "resizable": true,
-        "title": "Airlock — DevSecOps Operations Cockpit",
         "width": 1440,
         "decorations": false,
         "transparent": false
       }
-    ]
+    ],
+    "security": {
+      "csp": "default-src 'self' tauri:; style-src 'self' 'unsafe-inline';"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "category": "DeveloperTool",
+    "copyright": "Airlock Open-Source DevSecOps Operations Cockpit",
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "longDescription": "Airlock - Open-Source Desktop DevSecOps Operations Cockpit with Local AI Diagnostic Copilot",
+    "shortDescription": "Airlock Operations Cockpit",
+    "targets": "all"
   }
 }

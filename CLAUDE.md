@@ -63,7 +63,11 @@ accordingly:
 
 ## TECH STACK (do not substitute without an ADR)
 
-- Desktop shell: Tauri v1.6 (Rust backend + web frontend, small binary, secure IPC). NOTE: currently v1; a v2 upgrade is a tracked post-launch task, not an ad-hoc change.
+- Desktop shell: Tauri v2 (Rust backend + web frontend, small binary, secure IPC). Migrated from
+  v1.6 on 2026-09-19 to unblock builds on Ubuntu 24.04 (v1 needed WebKit 4.0, v2 uses the
+  installed WebKit 4.1) — see `docs/PROJECT_STATE.md` DECISION LOG. Requires the WebKit 4.1 dev
+  packages (`libwebkit2gtk-4.1-dev`, `libjavascriptcoregtk-4.1-dev`, `libsoup-3.0-dev`,
+  `libgtk-3-dev`). UI uses `@tauri-apps/api` v2 (`invoke` from `@tauri-apps/api/core`).
 - Core logic: Rust — crate name `airlock-core`
 - Kubernetes: `kube-rs` (async, typed)
 - Prometheus: HTTP API via `reqwest` (or `prometheus-http-query`)
@@ -148,7 +152,7 @@ terminal_close(session_id, env?) -> ()
 terminal_list_sessions() -> session_id[]
 analyze_service_why(service, env, mode) -> DiagnosticResult
 evaluate_policy(env, action_cmd) -> PolicyDecision
-execute_action(env, action_cmd, token?) -> Result<String>
+execute_action(env, action_cmd, token?) -> ExecutionOutcome { output, success }
 get_audit_logs(limit) -> AuditEntry[]
 get_system_status() -> SystemStatus
 get_resource_tree() -> ResourceNode[]

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import {
   Sparkles,
   CheckCircle2,
@@ -9,7 +9,7 @@ import {
   Activity,
   Cpu
 } from 'lucide-react';
-import { DiagnosticResult, EnvironmentTier, AIMode } from '../types';
+import { DiagnosticResult, EnvironmentTier, AIMode, ProviderInfo } from '../types';
 
 interface DevSecOpsCopilotPanelProps {
   isOpen: boolean;
@@ -47,8 +47,19 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
   onExecuteCommand
 }) => {
   const [inputVal, setInputVal] = useState('');
-  const [selectedModel] = useState('qwen2.5-coder (Local)');
+  const [selectedModel, setSelectedModel] = useState('qwen2.5-coder (Local)');
   const [isInvestigating, setIsInvestigating] = useState(false);
+
+  React.useEffect(() => {
+    invoke<ProviderInfo[]>('providers_list')
+      .then((providers) => {
+        const active = providers.find((p) => p.configured) || providers[0];
+        if (active) {
+          setSelectedModel(`${active.name} · ${active.default_model}`);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const [investigations, setInvestigations] = useState<StructuredInvestigation[]>([]);
 
@@ -127,32 +138,79 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
 
   return (
     <aside
-      aria-label="DevSecOps AI Copilot Panel"
-      className="w-[450px] border-l border-slate-800 bg-[#0d1320] flex flex-col font-mono text-xs text-slate-200 z-30 shadow-2xl"
+      aria-label="Airlock AI Copilot Panel"
+      style={{
+        width: 380,
+        flexShrink: 0,
+        borderLeft: '1px solid #1a2232',
+        backgroundColor: '#0b0f17',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'var(--font-mono)',
+        fontSize: 12,
+        color: '#e2e8f0',
+        zIndex: 30,
+        userSelect: 'none',
+      }}
     >
       {/* Panel Header */}
-      <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-[#101726]">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-            <Sparkles size={15} />
+      <div
+        style={{
+          padding: '10px 14px',
+          borderBottom: '1px solid #1a2232',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: '#0d1320',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            style={{
+              padding: 5,
+              borderRadius: 5,
+              backgroundColor: 'rgba(99, 102, 241, 0.18)',
+              color: '#818cf8',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              display: 'flex',
+            }}
+          >
+            <Sparkles size={14} />
           </div>
           <div>
-            <div className="font-bold text-slate-100 flex items-center gap-1.5">
-              <span>DEVSECOPS AI AGENT</span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <div style={{ fontWeight: 700, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span>AIRLOCK COPILOT</span>
+              <span
+                style={{
+                  padding: '1px 6px',
+                  borderRadius: 3,
+                  fontSize: 9,
+                  backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                  color: '#34d399',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                }}
+              >
                 ACTIVE
               </span>
             </div>
-            <div className="text-[10px] text-slate-400">Context: prod-eks-us-east-1</div>
+            <div style={{ fontSize: 10, color: '#64748b' }}>prod-eks-us-east-1 · read + draft only</div>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           {onOpenSettings && (
             <button
               onClick={onOpenSettings}
               title="AI Gateway & Routing Settings"
-              className="p-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+              style={{
+                padding: 5,
+                borderRadius: 4,
+                color: '#94a3b8',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+              }}
             >
               <Sliders size={14} />
             </button>
@@ -160,8 +218,16 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
           {onClose && (
             <button
               onClick={onClose}
-              title="Close Panel"
-              className="p-1.5 rounded text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition"
+              title="Collapse Panel"
+              style={{
+                padding: 5,
+                borderRadius: 4,
+                color: '#94a3b8',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+              }}
             >
               <X size={15} />
             </button>
@@ -169,24 +235,43 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
         </div>
       </div>
 
-      {/* Model & Policy Status Bar */}
-      <div className="px-4 py-2 bg-[#090d16] border-b border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
-        <div className="flex items-center gap-1.5 truncate">
-          <Cpu size={12} className="text-indigo-400 shrink-0" />
-          <span className="truncate">{selectedModel}</span>
+      {/* Model & Policy strip */}
+      <div
+        style={{
+          padding: '7px 14px',
+          backgroundColor: '#080c13',
+          borderBottom: '1px solid #1a2232',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: 10,
+          color: '#64748b',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+          <Cpu size={12} color="#818cf4" style={{ flexShrink: 0 }} />
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedModel}</span>
         </div>
-        <span className="text-emerald-400 font-semibold shrink-0">POLICY GUARD: ON</span>
+        <span style={{ color: '#34d399', fontWeight: 700, flexShrink: 0 }}>POLICY GUARD: ON</span>
       </div>
 
       {/* Structured Investigations Feed */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {isInvestigating && (
-          <div className="p-4 rounded-lg bg-indigo-950/20 border border-indigo-500/40 animate-pulse text-indigo-300">
-            <div className="flex items-center gap-2 font-bold text-xs">
-              <Activity size={14} className="animate-spin" />
-              INVESTIGATING TELEMETRY & AUDIT SIGNALS...
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 6,
+              backgroundColor: 'rgba(67, 56, 202, 0.12)',
+              border: '1px solid rgba(99, 102, 241, 0.4)',
+              color: '#a5b4fc',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: 11 }}>
+              <Activity size={14} />
+              INVESTIGATING TELEMETRY &amp; AUDIT SIGNALS...
             </div>
-            <div className="mt-2 text-[11px] text-slate-400 font-sans space-y-1">
+            <div style={{ marginTop: 7, fontSize: 11, color: '#94a3b8', fontFamily: 'var(--font-sans)' }}>
               <div>• Correlating Prometheus metrics and error spikes</div>
               <div>• Querying Kubernetes event stream</div>
               <div>• Inspecting Git history and recent deployment artifacts</div>
@@ -194,115 +279,184 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
           </div>
         )}
 
-        {investigations.map(inv => (
+        {investigations.map((inv) => (
           <div
             key={inv.id}
-            className="rounded-lg border border-slate-800 bg-[#0f1625] overflow-hidden shadow-sm"
+            style={{
+              border: '1px solid #1a2232',
+              borderRadius: 6,
+              backgroundColor: '#0f1625',
+              overflow: 'hidden',
+            }}
           >
-            {/* User Query */}
-            <div className="px-3.5 py-2.5 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
-              <span className="font-bold text-slate-200 truncate">{inv.query}</span>
-              <span className="text-[10px] text-slate-500">{inv.timestamp}</span>
+            {/* User query */}
+            <div
+              style={{
+                padding: '9px 12px',
+                backgroundColor: '#0a0e18',
+                borderBottom: '1px solid #1a2232',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 8,
+              }}
+            >
+              <span style={{ fontWeight: 700, color: '#e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {inv.query}
+              </span>
+              <span style={{ fontSize: 10, color: '#475569', flexShrink: 0 }}>{inv.timestamp}</span>
             </div>
 
-            {/* Structured Findings */}
-            <div className="p-3.5 space-y-3">
-              {/* Investigation Stepper Checklist */}
-              <div className="space-y-1 bg-slate-900/60 p-2.5 rounded border border-slate-800/80 text-[10px]">
-                <div className="text-slate-400 font-bold uppercase tracking-wider mb-1">
+            <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Investigation pipeline */}
+              <div style={{ backgroundColor: '#0a0e18', padding: 9, borderRadius: 4, border: '1px solid #1a2232', fontSize: 10 }}>
+                <div style={{ color: '#64748b', fontWeight: 700, letterSpacing: 0.5, marginBottom: 4 }}>
                   INVESTIGATION PIPELINE
                 </div>
                 {inv.stepsCompleted.map((step, idx) => (
-                  <div key={idx} className="flex items-start gap-1.5 text-slate-300">
-                    <CheckCircle2 size={11} className="text-emerald-400 shrink-0 mt-0.5" />
+                  <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 5, color: '#cbd5e1' }}>
+                    <CheckCircle2 size={11} color="#34d399" style={{ marginTop: 2, flexShrink: 0 }} />
                     <span>{step}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Root Cause */}
-              <div className="border border-slate-800 rounded p-2.5 bg-[#0a0e18]">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 font-bold text-[10px] uppercase">
+              {/* Root cause */}
+              <div style={{ border: '1px solid #1a2232', borderRadius: 4, padding: 9, backgroundColor: '#0a0e18' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b', fontWeight: 700, fontSize: 10, letterSpacing: 0.5 }}>
                     LIKELY ROOT CAUSE
                   </span>
-                  <span className="px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 text-[10px] font-bold border border-indigo-500/30">
+                  <span
+                    style={{
+                      padding: '1px 6px',
+                      borderRadius: 3,
+                      backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                      color: '#818cf8',
+                      fontSize: 9.5,
+                      fontWeight: 700,
+                      border: '1px solid rgba(99, 102, 241, 0.3)',
+                    }}
+                  >
                     EVIDENCE-LINKED
                   </span>
                 </div>
-                <div className="font-bold text-slate-100 text-xs mt-1">
-                  {inv.likelyRootCause}
-                </div>
+                <div style={{ fontWeight: 700, color: '#f1f5f9', marginTop: 4, fontSize: 12 }}>{inv.likelyRootCause}</div>
               </div>
 
               {/* Evidence */}
               <div>
-                <span className="text-slate-400 font-bold text-[10px] uppercase block mb-1">
+                <span style={{ color: '#64748b', fontWeight: 700, fontSize: 10, letterSpacing: 0.5, display: 'block', marginBottom: 4 }}>
                   EVIDENCE SIGNALS
                 </span>
-                <div className="space-y-1 text-slate-300 text-[11px] font-sans">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, color: '#cbd5e1', fontSize: 11, fontFamily: 'var(--font-sans)' }}>
                   {inv.evidence.map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-1.5">
-                      <span className="text-indigo-400 font-mono">•</span>
+                    <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                      <span style={{ color: '#818cf8' }}>•</span>
                       <span>{item}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Recommended Action & Risk */}
-              <div className="p-2.5 rounded bg-indigo-950/20 border border-indigo-500/30">
-                <div className="flex items-center justify-between">
-                  <span className="text-indigo-300 font-bold text-[10px] uppercase">
+              {/* Recommended action + approval */}
+              <div
+                style={{
+                  padding: 9,
+                  borderRadius: 4,
+                  backgroundColor: 'rgba(67, 56, 202, 0.1)',
+                  border: '1px solid rgba(99, 102, 241, 0.3)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#a5b4fc', fontWeight: 700, fontSize: 10, letterSpacing: 0.5 }}>
                     RECOMMENDED ACTION
                   </span>
                   <span
-                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                      inv.risk === 'HIGH' || inv.risk === 'CRITICAL'
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                        : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                    }`}
+                    style={{
+                      padding: '1px 6px',
+                      borderRadius: 3,
+                      fontSize: 9,
+                      fontWeight: 700,
+                      backgroundColor: inv.risk === 'HIGH' || inv.risk === 'CRITICAL' ? 'rgba(239, 68, 68, 0.18)' : 'rgba(245, 158, 11, 0.18)',
+                      color: inv.risk === 'HIGH' || inv.risk === 'CRITICAL' ? '#f87171' : '#fbbf24',
+                      border: `1px solid ${inv.risk === 'HIGH' || inv.risk === 'CRITICAL' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                    }}
                   >
                     RISK: {inv.risk}
                   </span>
                 </div>
-                <div className="text-xs text-slate-200 mt-1 font-sans">
+                <div style={{ fontSize: 12, color: '#e2e8f0', marginTop: 4, fontFamily: 'var(--font-sans)' }}>
                   {inv.recommendedAction}
                 </div>
 
-                {/* Staged Command */}
-                <div className="mt-2.5 p-2 rounded bg-black/50 border border-slate-800 font-mono text-[10px] text-emerald-400 flex items-center justify-between">
-                  <span className="truncate">{inv.proposedCommand}</span>
+                {/* Staged command */}
+                <div
+                  style={{
+                    marginTop: 8,
+                    padding: 7,
+                    borderRadius: 4,
+                    backgroundColor: '#04060a',
+                    border: '1px solid #1e293b',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 10,
+                    color: '#34d399',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    wordBreak: 'break-all',
+                  }}
+                >
+                  <span>{inv.proposedCommand}</span>
                 </div>
 
-                {/* Human in the loop approval */}
-                <div className="mt-3 flex items-center justify-between pt-1">
-                  <span className="text-[10px] text-slate-500">Human Review Required</span>
-                  <div className="flex items-center gap-2">
+                {/* Human-in-the-loop approval */}
+                <div style={{ marginTop: 9, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 10, color: '#64748b' }}>Human Review Required</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {inv.status === 'PROPOSED' ? (
                       <>
                         <button
                           onClick={() => handleReject(inv.id)}
-                          className="px-2.5 py-1 rounded border border-red-500/30 text-red-400 hover:bg-red-500/10 text-[10px] font-semibold transition"
+                          style={{
+                            padding: '3px 9px',
+                            borderRadius: 4,
+                            border: '1px solid rgba(239, 68, 68, 0.35)',
+                            color: '#f87171',
+                            background: 'none',
+                            cursor: 'pointer',
+                            fontSize: 10,
+                            fontWeight: 600,
+                          }}
                         >
                           Reject
                         </button>
                         <button
                           onClick={() => handleApprove(inv.id, inv.proposedCommand)}
-                          className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold transition flex items-center gap-1 shadow"
+                          style={{
+                            padding: '3px 10px',
+                            borderRadius: 4,
+                            backgroundColor: '#059669',
+                            color: '#fff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: 10,
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
                         >
                           <CheckCircle2 size={11} />
-                          Approve & Execute
+                          Approve &amp; Execute
                         </button>
                       </>
                     ) : inv.status === 'APPROVED' ? (
-                      <span className="text-emerald-400 font-bold text-[10px] flex items-center gap-1">
-                        <CheckCircle2 size={12} /> Approved & Executed
+                      <span style={{ color: '#34d399', fontWeight: 700, fontSize: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <CheckCircle2 size={12} /> Approved &amp; Executed
                       </span>
                     ) : (
-                      <span className="text-red-400 font-bold text-[10px]">
-                        Action Rejected by Operator
-                      </span>
+                      <span style={{ color: '#f87171', fontWeight: 700, fontSize: 10 }}>Action Rejected by Operator</span>
                     )}
                   </div>
                 </div>
@@ -313,26 +467,64 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
       </div>
 
       {/* Prompt Input Form */}
-      <div className="p-3 border-t border-slate-800 bg-[#0f1625]">
-        <div className="flex items-center gap-2 bg-[#090d16] border border-slate-800 rounded-lg p-2 focus-within:border-indigo-500 transition">
+      <div style={{ padding: 10, borderTop: '1px solid #1a2232', backgroundColor: '#0f1625' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: '#080c13',
+            border: '1px solid #1e293b',
+            borderRadius: 6,
+            padding: 7,
+          }}
+        >
           <input
             type="text"
             placeholder="Ask AI to investigate pods, deployments, CVEs..."
             value={inputVal}
-            onChange={e => setInputVal(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSend()}
-            className="flex-1 bg-transparent text-slate-200 text-xs focus:outline-none placeholder-slate-500"
+            onChange={(e) => setInputVal(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: '#e2e8f0',
+              fontSize: 12,
+              minWidth: 0,
+              fontFamily: 'var(--font-sans)',
+            }}
           />
           <button
             onClick={handleSend}
             disabled={!inputVal.trim() || isInvestigating}
-            className="p-1.5 rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold transition"
+            title="Investigate"
+            style={{
+              padding: 6,
+              borderRadius: 4,
+              backgroundColor: '#4f46e5',
+              border: 'none',
+              color: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              opacity: !inputVal.trim() || isInvestigating ? 0.4 : 1,
+            }}
           >
             <Send size={13} />
           </button>
         </div>
-        <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
-          <span>Press Enter to investigate</span>
+        <div
+          style={{
+            marginTop: 5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: 10,
+            color: '#475569',
+          }}
+        >
+          <span>Enter to investigate · Ctrl+K inline</span>
           <span>Controlled Tool Sandbox</span>
         </div>
       </div>

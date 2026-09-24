@@ -2,14 +2,19 @@ pub mod audit;
 pub mod context;
 pub mod credentials;
 pub mod execution;
+pub mod findings;
 pub mod integrations;
 pub mod models;
 pub mod policy;
 
 pub use audit::AuditEngine;
 pub use context::ContextEngine;
-pub use credentials::CredentialVault;
-pub use execution::ExecutionEngine;
+pub use credentials::{
+    CredentialReference, CredentialVault, SecretKind, StoreVaultSecretRequest, VaultSecretMetadata,
+    VaultStatus,
+};
+pub use execution::{ExecutionEngine, ExecutionOutcome};
+pub use findings::FindingStore;
 pub use integrations::{HealthStatus, Integration, IntegrationCapability, IntegrationIdentity};
 pub use models::*;
 pub use policy::PolicyEngine;
@@ -121,7 +126,8 @@ mod tests {
         let (out, status) = engine
             .execute_action(&policy, &EnvironmentTier::Production, "echo hello", None)
             .unwrap();
-        assert!(out.contains("hello"));
+        assert!(out.success);
+        assert!(out.output.contains("hello"));
         assert_eq!(status, models::ApprovalStatus::AutoExecutedRead);
     }
 

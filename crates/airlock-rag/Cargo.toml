@@ -1,0 +1,19 @@
+[package]
+name = "airlock-rag"
+version = "0.1.0"
+edition = "2021"
+description = "Local-first RAG: deterministic offline chunking, local vector store, corpus ingest/query with honest fallback embeddings"
+
+[dependencies]
+airlock-core = { path = "../airlock-core" }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+reqwest.workspace = true
+sha2.workspace = true
+async-trait.workspace = true
+
+[dev-dependencies]
+tokio.workspace = true

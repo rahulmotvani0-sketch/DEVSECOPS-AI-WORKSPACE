@@ -10,11 +10,12 @@ Legend: `[ ]` you do it · `⚠` credibility-critical · `🤖` an AI agent can 
 
 ## Phase A — Prove it's green (do first)
 
-- [x] ~~**Resolve the Tauri version discrepancy.**~~ RESOLVED: verified the whole stack is
-  **Tauri v1.6** and internally consistent (`tauri = "1.6"`, `@tauri-apps/api ^1.6.0`, v1-format
-  `tauri.conf.json`, v1 Rust APIs). Only the docs were wrong — README badge and CLAUDE.md now
-  corrected to v1. A **v2 upgrade is deferred to post-launch** (see bottom of this file); do not
-  migrate before launch — the v1 app works.
+- [x] ~~**Resolve the Tauri version discrepancy.**~~ RESOLVED, then **upgraded to Tauri v2**
+  (2026-09-19): v1.6 couldn't build on Ubuntu 24.04 (needs WebKit 4.0, not packaged); v2 uses
+  the installed WebKit 4.1. Stack is now `tauri = "2"`, `@tauri-apps/api ^2.11.1`, v2-format
+  `tauri.conf.json` + `capabilities/`, v2 Rust APIs. See `docs/PROJECT_STATE.md` DECISION LOG.
+  (The old "do not migrate before launch" note is superseded — the migration was required to
+  keep the desktop build green on the current host.)
 - [ ] `⚠` **Verify `vault_get_status`.** It was returning fabricated data (`secrets_count: 14`).
   Now stubbed to honest defaults (`Not configured`, `0`). Either wire it to
   `airlock_core::CredentialVault` or leave the honest stub — never show fake vault state.
@@ -89,9 +90,12 @@ Legend: `[ ]` you do it · `⚠` credibility-critical · `🤖` an AI agent can 
 - SSH bastion sessions + multi-cluster quick-switch.
 - A CI job that at least *compiles* the `airlock-desktop` crate (install webkit2gtk libs).
 - Signed release binaries for Linux/macOS/Windows.
-- **Tauri v1.6 → v2 upgrade** (`emit_all`→`emit`, `get_window`→`get_webview_window`, UI import
-  `@tauri-apps/api/tauri`→`@tauri-apps/api/core`, migrate `tauri.conf.json` allowlist→capabilities).
-  Do it deliberately with the desktop app testable, not as a pre-launch scramble.
+- [x] **Tauri v1.6 → v2 upgrade** — **DONE 2026-09-19** (`emit_all`→`emit`,
+  `get_window`→`get_webview_window`, UI import `@tauri-apps/api/tauri`→`@tauri-apps/api/core`,
+  `tauri.conf.json` allowlist→capabilities). Done deliberately with the desktop crate compiling
+  and booting headlessly; interactive click-through still pending a display.
+- CI job that compiles `airlock-desktop` (install `libwebkit2gtk-4.1-dev` + the other WebKit 4.1
+  dev packages) — now feasible since the v2 upgrade.
 
 ## Definition of "launched"
 Repo public · CI green · demo GIF at top of README · Show HN posted · first external issue

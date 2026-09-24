@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
+import { invoke } from '@tauri-apps/api/core';
 import {
   Shield,
   ChevronDown,
@@ -82,7 +82,7 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
           <Shield size={17} color="#10b981" strokeWidth={2.4} />
           <span style={{ fontWeight: 700, fontSize: '14px', color: '#f8fafc', letterSpacing: '0.4px' }}>
-            Airlock
+            Airlock <span style={{ color: '#64748b', fontWeight: 600 }}>Operations Cockpit</span>
           </span>
         </div>
 

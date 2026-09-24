@@ -1,0 +1,12 @@
+[package]
+name = "airlock-providers"
+version = "0.1.0"
+edition = "2021"
+description = "LLM provider registry over the airlock-ai LlmProvider trait, with the production cloud-AI policy gate"
+
+[dependencies]
+airlock-core = { path = "../airlock-core" }
+airlock-ai = { path = "../airlock-ai" }
+serde = { workspace = true, features = ["derive"] }
+anyhow.workspace = true
+async-trait.workspace = true
