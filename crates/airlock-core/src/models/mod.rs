@@ -3,12 +3,21 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// Environment Tiers
+///
+/// Serializes as snake_case. The PascalCase aliases exist because the Tauri commands that take a
+/// bare `env: String` parse it as PascalCase (`"Production"`), so the UI sends PascalCase
+/// everywhere — including inside structs like `SavedConnection`, which serde decodes. Without the
+/// aliases those two conventions disagree and `conn_save` rejects every connection.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum EnvironmentTier {
+    #[serde(alias = "Production")]
     Production,
+    #[serde(alias = "Staging")]
     Staging,
+    #[serde(alias = "Development")]
     Development,
+    #[serde(alias = "Local")]
     Local,
 }
 

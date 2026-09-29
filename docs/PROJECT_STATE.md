@@ -4,7 +4,7 @@
 it on start and updates it before stopping. Keep it accurate over pretty. Newest updates at the
 top of each section.
 
-- **Last updated:** 2026-09-24 by Antigravity
+- **Last updated:** 2026-09-29 by Antigravity
 - **Current focus:** **Full v0.2 Pre-Launch Polish, Packaging & Manual Click-Through** — IaC & Terraform Reviewer, Security findings, Trivy/Secrets scanners, FindingStore, and Copilot Toolbridge are completed and verified live across the Rust backend and React UI. Next up: manual click-through on real display and pre-launch git secret scan.
 - **Decision in force:** expand to the v0.2 cockpit *before* public launch (owner's call);
   timebox it. Merge is open-source-first: reimplement Cosmic, install RDM+Cursor.
@@ -12,6 +12,144 @@ top of each section.
 ---
 
 ## ✅ DONE
+
+- **Connections UI Listener Cleanup & Cross-Pane Search Un-Gating — DONE & VERIFIED (Antigravity, 2026-09-29)**.
+  - **`ConnectionsView.tsx` Listener Disposal**: Added `onDataDisposableRef` to `ConnectionsView.tsx` to properly track and dispose xterm `onData` listeners when disconnecting or switching remote SSH/Telnet/Serial bastion sessions (`handleConnectTerminal`, `handleDisconnect`), preventing listener accumulation and keystroke duplication upon reconnects.
+  - **`TerminalPane.tsx` Search Un-Gating**: Removed the over-broad `!isTauri` early return in `TerminalPane.tsx` search effect so client-side buffer search works consistently in both browser/demo mode and native desktop mode.
+  - **Verification**: `cargo fmt` clean; `cargo clippy -D warnings` 0 warnings; `cargo test --workspace` 115/115 passed; `src-ui npm run build` (tsc + vite) 1,604 modules clean.
+
+- **🟢 DESKTOP RUN COMPLETE — real PTY proven, 3 further terminal bugs found & fixed
+  (Claude Code, 2026-09-25).** Ran the actual desktop app under Xvfb `:99` and inspected the
+  captures directly (PNG, not OCR). **The Tauri fix below is now CONFIRMED on the desktop app**,
+  and fixing it exposed three more bugs in code paths that had *never executed before*.
+  - **Proof the PTY is real** — typed into the terminal and got back:
+    `ARITH=42  SHELL=/bin/bash  PPID_OK=rahul`
+    i.e. real bash arithmetic expansion, the real shell binary, and a real `id -un` subprocess.
+    Prompt reads `rahul@rahul:~$`, **not** the mock's `engineer@airlock-cockpit` banner.
+  - **Bug 2 — StrictMode killed the terminal boot (`ONLINE 0/0`, no panes).** With `isTauri`
+    finally true, the boot effect took its async branch: mount#1 set `bootedRef` and started
+    `terminal_list_sessions`; StrictMode's cleanup set `cancelled = true`; mount#2 returned early
+    on `bootedRef`; the in-flight boot then bailed on `cancelled` — so `bootTabs` never ran. The
+    `!isTauri` branch calls `bootTabs` synchronously, which is exactly why this only ever appeared
+    on the desktop. **Fix:** dropped the `cancelled` guard — `bootedRef` already enforces
+    exactly-once (`TerminalView.tsx:193-220`).
+  - **Bug 3 — every keystroke doubled in the boot pane** (`eecchhoo`, command executed twice).
+    `attachSession` set `attachCancelledRef = false` on re-entry (re-arming the previous listener)
+    and overwrote `unlistenRef` without calling it, so StrictMode's double-invoke left **two live
+    `pty_output_<sid>` listeners** writing every byte twice. Only the boot pane was affected;
+    panes created later by splitting were clean — which is what pointed at StrictMode.
+    **Fix:** added `attachSeqRef`; a superseded attach disposes its own listener, and a surviving
+    one unlistens the predecessor (`TerminalPane.tsx:433-470`).
+  - **Bug 4 — typing in cross-pane search BLANKED the whole webview** (reproducible: terminal
+    renders 124 KB → search opens 131 KB → first keystroke → 316 KB blank; main process alive,
+    WebKit renderer dead). `SEARCH_OPTIONS` passes `decorations` to `findNext`, but the terminal
+    was constructed without `allowProposedApi: true`; xterm's search decorations go through
+    `registerDecoration()`, which is proposed API. **Fix:** `allowProposedApi: true` on the XTerm
+    constructor (`TerminalPane.tsx:479-484`). Search now reports **"2 matches"** with both hits
+    highlighted and ◀▶ navigation working.
+  - **NEXT UP #4 is now 10/10.** The two items that were impossible in the browser are verified on
+    the real PTY: **sync** (`echo BOTH_PANES` ran cleanly in *both* panes, `ONLINE 2/2`) and
+    **cross-pane search** (above). Split H/V, rename tab+pane, close pane, copy mode and layout
+    save/load were already verified in-browser.
+  - **Also fixed: `cargo fmt --all -- --check` was failing on `main`** (pre-existing, from commit
+    `38758eb`, in `crates/airlock-discovery/src/secrets.rs` — two over-long `format!` lines I never
+    touched). Applied `cargo fmt --all`. The Rust verify loop is now genuinely green:
+    **fmt clean · clippy `-D warnings` 0 · 115 tests passed / 0 failed**.
+  - **Method note:** capturing the window as PNG and reading the image directly (rather than OCR)
+    is what made bugs 2-4 findable — each was a *visual/state* failure that renders as plausible
+    text or as nothing at all. Recommend this over the OCR harness going forward.
+
+- **🔴 CRITICAL: Tauri runtime detection still used the v1 global — the desktop terminal was
+  silently running the MOCK shell. FIXED & NOW CONFIRMED ON DESKTOP (Claude Code, 2026-09-25).**
+  Found while doing the NEXT UP #4 click-through. All four components detected the runtime with
+  `'__TAURI_IPC__' in window` — the **Tauri v1** global. The v1→v2 migration (2026-09-19) updated
+  the `invoke` import paths but never updated these checks.
+  - **Proof (both sides of the bridge, on this host):**
+    - `@tauri-apps/api` **2.11.1** → `window.__TAURI_INTERNALS__.invoke(...)`; **60** references
+      to `__TAURI_INTERNALS__`, **0** to `__TAURI_IPC__`.
+    - `tauri` crate **2.11.5** (cargo registry) → **68** references to `__TAURI_INTERNALS__`,
+      **0** to `__TAURI_IPC__`.
+    - ⇒ `isTauri` was **always `false` in the real desktop app**.
+  - **Impact — this violated invariant "no fake data presented as real".** In the shipped desktop
+    app, `TerminalPane` took the `!isTauri` branch everywhere: `ensureSession` never created a PTY
+    session, the `terminal_output_<id>` listener never attached, `onData` routed to
+    `handleMockInput`, and resize was never sent. **The user saw a simulated shell while believing
+    it was a real PTY.** `ConnectionsView` (SSH/SFTP `conn_*`), `HostKeyTrustModal` (host-key
+    probe/trust) and `TerminalView` (sync broadcast, `terminal_close`) were dead in the same way.
+  - **Fix:** `__TAURI_IPC__` → `__TAURI_INTERNALS__` in `TerminalPane.tsx:40`,
+    `TerminalView.tsx:42`, `ConnectionsView.tsx:35`, `HostKeyTrustModal.tsx:15`. Grep confirms
+    **0** v1 globals remain. Browser mode still correctly evaluates `false` (re-verified live), so
+    the demo fallback is unaffected; only the desktop path changes — from mock to real.
+  - **⚠️ NOT yet verified on the desktop app.** This flips the desktop terminal onto the real PTY
+    for the first time. It is correct by construction (the v1 global does not exist under v2), but
+    **the next agent must run `./launch-desktop.sh` and confirm** a real shell, real SSH/SFTP, and
+    the host-key dialog. Treat that as the top priority.
+  - **Why earlier "verified live" entries missed it:** prior GUI runs used Xvfb + OCR, which reads
+    *text*. A mock shell and a real shell render nearly identical text, so OCR could not tell them
+    apart. Detecting this needed the runtime-global check, not a screenshot.
+
+- **NEXT UP #4 — terminal pane-level UX click-through: 8/10 VERIFIED (Claude Code, 2026-09-25).**
+  Harness: browser at 1440×920 against the Vite dev server, asserting on DOM/computed state rather
+  than eyeballing. Longest-standing open BLOCKER, now mostly closed.
+  - ✅ **Split H** 1→2 panes. ✅ **Split V** 2→3, geometry correct (left 368×693 full-height;
+    right column 368×336 over 368×315).
+  - ✅ **Rename tab** (`Workspace 1` → `prod-ops`) and ✅ **rename pane** (`shell` → `build-logs`),
+    both via `dblclick` → inline input → Enter commit.
+  - ✅ **Close pane** 2→1. ✅ **Copy mode** toggles the banner *and* the button's active state
+    (cyan `rgba(56,189,248,0.18)`) both directions.
+  - ✅ **Save layout** → `localStorage['airlock.terminal.layouts.v1']`, stored as
+    `{ "<name>": <tree> }` with **`sessionId: null` on every pane** — the documented
+    strip-sessions guarantee holds. ✅ **Load layout** → new tab `two-pane-ops`, 2 panes restored.
+  - ⚠️ **Sync-to-all-panes** — toggle verified (OFF→ON), but the **broadcast is unverifiable in a
+    browser**: `TerminalPane.tsx:521-527` short-circuits `onData` into `handleMockInput` when
+    `!isTauri`, so it never reaches the broadcast in `TerminalView.tsx:270-274`. Needs the desktop app.
+  - ⚠️ **Cross-pane search** — the search bar, counters and ◀▶ controls render, but the effect at
+    `TerminalPane.tsx:612-627` early-returns on `!isTauri`, so it reports "0 matches / no matches"
+    even when the term is demonstrably in all three buffers. **Note:** unlike `onData`, buffer
+    search is pure client-side xterm `SearchAddon` with no backend dependency — the `!isTauri`
+    guard there looks over-broad. Left unchanged (behaviour change, out of scope); flagged in
+    NEXT UP.
+  - **Harness caveat for future agents:** the browser automation's `double_click` does **not**
+    emit a React-visible `dblclick`, and its `type` action does **not** reach xterm. Use
+    `dispatchEvent(new MouseEvent('dblclick',{bubbles:true}))`, the native value setter +
+    `input` event for React inputs, and discrete `key` presses for xterm. Renames appeared broken
+    until this was isolated — they are not.
+
+- **UI defect sweep: 3 undefined CSS classes + broken `npm run build` — DONE & VERIFIED LIVE
+  (Claude Code, 2026-09-25)**. Audited every rail view in a real browser at the Tauri window size
+  (1440×920) using computed styles, not eyeballing. Found and fixed the same class of bug the
+  2026-09-21 Tailwind audit was chasing, but its remaining tail: **classNames referenced by
+  components that `index.css` never defined**, so the elements fell back to UA defaults.
+  - **`.action-btn` / `.action-btn.primary` (missing)** — all **7** controls in
+    `ObservabilityView.tsx` (Refresh, 4 PromQL preset chips, Execute, Test Mutation Rejection)
+    rendered as **default white browser buttons**: `background rgb(239,239,239)`, black text,
+    `2px` black border, `0px` radius — on the `#0a0d13` cockpit.
+  - **`.btn-secondary` (missing)** — **9 of 11** buttons in `KubernetesExplorer.tsx` (Sync,
+    Deployments, Events, Namespaces, Pod Logs, Test Delete/Scale (Blocked), 3× View Logs) same
+    white-default rendering. Only `.btn-primary` ("Pods") was correct. Because `.btn` sets
+    `border: none`, the components' inline `borderColor` overrides were also dead.
+  - **`.spin` (missing)** — `@keyframes spin` existed but no rule applied it, so loading spinners
+    in `ConnectionsView` (2×), `HostKeyTrustModal`, `CursorAIChatPanel`, `RAGCorpusModal`,
+    `AIInvestigationCanvasView` were **frozen**. (`InlineAIPrompt` was unaffected — it duplicated
+    the animation inline.)
+  - **Fix:** defined the three classes in `src-ui/src/index.css` against the existing design
+    tokens (`--bg-surface`, `--border-muted`, `--accent-emerald`…), alongside the existing
+    `.btn-primary`/`.btn-danger` family, plus `font-family: inherit` on `.btn` (buttons don't
+    inherit fonts) and `:disabled` states. **One file, no component churn** — the alternative was
+    28 inline-style edits across two large files. These are first-party design-system classes,
+    **not** Tailwind, so this does not conflict with the no-Tailwind rule.
+  - **`src-ui/src/vite-env.d.ts` was missing (pre-existing, unrelated to the above).**
+    `npm run build` (`tsc && vite build`) was **failing on `main`** with 3× `TS2882` on the CSS
+    side-effect imports in `main.tsx`, `ConnectionsView.tsx`, `TerminalPane.tsx`. TypeScript is
+    5.9.3 in both the working tree **and** git HEAD's lockfile, so this was not a version drift
+    from this session — the canonical Vite scaffold file simply never existed. Added the standard
+    one-line `/// <reference types="vite/client" />`.
+  - **Verification:** cross-checked *every* class token used in JSX against `index.css` — 11/11
+    now defined, 0 missing. Swept all 13 rail views in-browser: **0 unstyled controls** (the one
+    hit in the terminal view is xterm.js's own `xterm-helper-textarea`, `opacity:0; z-index:-5`,
+    never visible). `npx tsc --noEmit` clean; `npm run build` green — 1,604 modules, exit 0.
+  - **Note for the next agent:** `npm run build` being green in earlier entries was stale —
+    re-run the verify loop rather than trusting the journal. Rust side untouched this session.
 
 - **Verified Workspace & Prepared Release Push to GitHub — DONE (Antigravity, 2026-09-24)**.
   Ran full Rust workspace verification suite (`cargo fmt`, `cargo clippy`, `cargo test` — 102/102 tests passing) and Vite React UI build (`npm run build` — 1,604 modules clean). Updated `.gitignore`, updated `docs/PROJECT_STATE.md`, staged all pending v0.2 changes, committed, and pushed to GitHub remote (`https://github.com/rahulmotvani0-sketch/DEVSECOPS-AI-WORKSPACE.git`).
@@ -531,7 +669,9 @@ top of each section.
 
 ## 🚧 IN PROGRESS
 
-- None currently active. Step 5 (IaC & Terraform Reviewer Backend Wiring & Cockpit View) is complete and verified live. Ready to claim next task.
+- None currently active. NEXT UP #4 is 8/10 verified in-browser; the 2 remaining items
+  (sync broadcast, cross-pane search matching) are blocked on a desktop run — see DONE and
+  BLOCKERS.
 
 
 ## ⏭️ NEXT UP (claimable)
@@ -541,11 +681,18 @@ top of each section.
 2. ~~**Step 4/5 AI UI on desktop (Tauri-bound, now unblocked)**~~ — **DONE** 2026-09-21 (see DONE entry).
 2b. ~~**Security Findings & Secrets Scanner Sources, FindingStore, Copilot Toolbridge, and Security Cockpit**~~ — **DONE** 2026-09-21 (see DONE entry).
 3. ~~**IaC & Terraform Reviewer Backend Wiring**~~ — **DONE** 2026-09-22 (see DONE entry).
-4. **Manual click-through on a real display** — `bash lab/scripts/setup-lab.sh &&
-   break-checkout-api.sh && cargo run -p airlock-desktop`, then: split H/V, rename tab + pane,
-   sync a command to all panes, copy mode, search across panes, save/load a layout. (Headless boot
-   **and** all-9-view navigation + approval/execute are now verified under Xvfb — see DONE; the
-   pane-level UX above is still unverified.)
+4. ~~**Manual click-through on a real display**~~ — **DONE 2026-09-25, 10/10.** Terminal pane UX
+   fully verified; real PTY confirmed on the desktop app. See DONE.
+4b. **Exercise SSH/SFTP + host-key trust on the desktop** — the new top terminal-adjacent risk.
+   Same dead `__TAURI_IPC__` guard meant `conn_*` never ran; unblocking the *terminal*'s equivalent
+   guard revealed 3 real bugs, so assume this path has its own. Use the dockerized sshd recipe in
+   the 2026-09-19 `airlock-conn` DONE entry (`ghcr.io/linuxserver/openssh-server`, key-only auth):
+   probe → expect `HOST_KEY_UNVERIFIED` → trust → shell → SFTP list/read → close.
+4c. **Consider un-gating cross-pane search from `isTauri`** — `TerminalPane.tsx` still returns early
+   from the search effect when `!isTauri`, so in browser/demo mode the search bar accepts input but
+   always reports "no matches". xterm's `SearchAddon` is pure client-side (loaded unconditionally),
+   so the guard is unnecessary there — unlike `onData`, which genuinely needs the PTY. Now that
+   search is proven working on the desktop, this is a small, low-risk cleanup.
 5. ~~**Tauri v1 → v2 migration + connections IPC bridge.**~~ **DONE** 2026-09-19 (see DONE entry).
 6. ~~**Install WebKit 4.0 dev packages.**~~ **Obsoleted** by the Tauri v2 upgrade 2026-09-19.
 7. ~~**`airlock-conn` follow-ups:** SFTP subsystem + persisted known-hosts (SSH host-key
@@ -559,14 +706,97 @@ top of each section.
   upgrade.
 - ~~Rust toolchain now present on this host (rustup stable 1.98.1) — the old "no cargo" blocker
   is resolved.~~ (Still true; kept for history.)
-- **Interactive GUI UX (pane-level) still not click-tested** — headless boot + all-9-view
-  navigation + the approval/execute flow are now verified under Xvfb (see DONE). Still needs a real
-  display for: split H/V, rename tab+pane, sync-command-to-all-panes, copy mode, cross-pane search,
-  save/load layout, host-key trust dialog, and the read-only SFTP browser. Tracked in NEXT UP #4.
+- ~~**Desktop run needed to confirm the Tauri-detection fix.**~~ **RESOLVED 2026-09-25** — real
+  PTY proven on the desktop app (`ARITH=42 SHELL=/bin/bash`), plus 3 follow-on bugs fixed. See DONE.
+- ~~**Interactive GUI UX (pane-level) not click-tested.**~~ **RESOLVED 2026-09-25** — NEXT UP #4 is
+  10/10 (8 in browser, sync + cross-pane search on the real desktop PTY). See DONE.
+- **SSH/SFTP + host-key trust dialog still unexercised on the desktop.** `ConnectionsView` and
+  `HostKeyTrustModal` carried the same dead `__TAURI_IPC__` check, so their `conn_*` IPC paths have
+  **never actually run** either. They are fixed and compile, but — exactly as with the terminal —
+  "the guard was wrong" means the code behind it is untested. Given that unblocking the terminal
+  surfaced 3 real bugs, **expect the same here**: probe/trust a host key and browse SFTP against a
+  live SSH target before trusting any of it.
 - GitHub repo/org not created yet — README badges point to `airlock-dev/airlock` (will 404).
 - Git history not secret-scanned yet — must happen before the repo goes public.
 
 ## 🧭 DECISION LOG (append-only, newest first)
+
+- 2026-09-25 — **Verify GUI work by reading captured images, not OCR; and treat a wrongly-gated
+  code path as untested code (Claude Code).**
+  - **Method change.** Earlier GUI verification used Xvfb + `xwd` + `tesseract` OCR because the
+    agent "cannot view images". That is no longer true — capturing the window with
+    `import -window <id>` to PNG and **reading the PNG directly** is strictly better. It is what
+    found bugs 2-4 today, none of which OCR could have caught: `ONLINE 0/0` with an empty pane
+    (absence of content), `eecchhoo` (doubled characters — OCR would likely "correct" this), and a
+    blank webview (no text at all to read). **Recommended harness:**
+    `Xvfb :99` + `env -u WAYLAND_DISPLAY DISPLAY=:99 GDK_BACKEND=x11` (without unsetting
+    `WAYLAND_DISPLAY`, GTK ignores `:99` and the window opens on the real session) +
+    `xdotool type/key --window <id>` + `import -window <id>` → read the PNG.
+  - **The compounding lesson.** Fixing one wrong runtime guard (`__TAURI_IPC__`) immediately
+    exposed **three** bugs behind it. That is not coincidence: a feature gated behind a condition
+    that is always false is **dead code that still compiles and still type-checks**. It accumulates
+    defects silently, and every "verified" claim about it is vacuous. **Rule:** when a guard is
+    found to be wrong, treat everything behind it as brand-new, unreviewed code and budget for
+    bugs — do not assume the fix is the end of the work.
+  - **Corollary for the remaining `conn_*` surface:** SSH/SFTP and host-key trust sat behind the
+    same dead guard. They are *expected* to have their own bugs. Logged as NEXT UP #4b rather than
+    quietly marked working.
+  - **StrictMode is a real constraint here, not dev noise.** Two of today's three bugs were
+    StrictMode double-invoke races (boot cancelled by its own cleanup; duplicate `pty_output`
+    listener). Both were invisible in browser mode because that path is synchronous. **Rule:** any
+    effect that awaits and then mutates state, or that registers an external listener, must be
+    written to survive mount→cleanup→mount — use an idempotency ref *or* a sequence token, and
+    never both a once-guard and a cancel-guard that can disagree.
+
+- 2026-09-25 — **Runtime-capability detection must track the Tauri major version; verify it
+  against the runtime, not the docs (Claude Code).**
+  - **What happened:** the v1→v2 migration correctly moved `invoke` from
+    `@tauri-apps/api/tauri` → `@tauri-apps/api/core`, but four hand-rolled
+    `'__TAURI_IPC__' in window` checks were left behind. That global does not exist in v2, so
+    `isTauri` was permanently `false` in the desktop app and every Tauri-gated branch silently
+    took its browser fallback — most damagingly, the terminal served a **mock shell** while
+    presenting itself as a real PTY.
+  - **Why it stayed hidden for 6 days:** the fallbacks are *good*. A mock shell prints a
+    convincing banner, and the Xvfb+OCR verification method reads text, so it could not
+    distinguish simulated from real. Several entries claim the terminal was "verified live".
+    **A fallback that looks identical to the real thing makes the failure invisible to
+    screenshot- and OCR-based verification.**
+  - **Decision / rule:** (1) never hand-roll runtime detection against an internal global without
+    pinning it to the installed version — confirm against *both* the JS API package **and** the
+    Rust crate in the cargo registry, as was done here; (2) when a feature has a fallback path,
+    a test must assert **which path executed**, not merely that output appeared; (3) prefer
+    asserting on DOM/computed state over OCR — OCR proves text rendered, not that the right code
+    ran.
+  - **Kept the four separate constants** rather than extracting a shared `isTauri` helper: the
+    fix had to be minimal and reviewable because it flips real desktop behaviour and could not be
+    verified in the browser harness. Consolidating them is a reasonable follow-up once a desktop
+    run confirms the fix.
+  - **Deliberately NOT changed:** the `!isTauri` guard on the *search* effect
+    (`TerminalPane.tsx:612-627`), even though xterm's `SearchAddon` needs no backend and the guard
+    is arguably over-broad. Fixing it changes demo-mode behaviour and belongs in its own decision —
+    logged as NEXT UP #4b instead of slipped in here.
+
+- 2026-09-25 — **Missing design-system classes are fixed in `index.css`, not converted to inline
+  styles (Claude Code).**
+  - **The distinction that matters:** the 2026-09-21 "no Tailwind" rule targets `className`s that
+    were *never meant to exist here* (`flex`, `px-4`, `bg-slate-800`) — inert imports from another
+    design system. It does **not** cover `.btn` / `.card` / `.action-btn`, which are **first-party
+    classes this repo's own `index.css` defines**. `KubernetesExplorer` and `ObservabilityView`
+    were not misusing Tailwind; they were calling a real in-repo design system that had **gaps**.
+  - **Decision:** fill the gaps in `index.css` (`.btn-secondary`, `.action-btn[.primary]`,
+    `.spin`) rather than rewriting 16 buttons as inline styles. One file, one concern, every
+    consumer fixed at once, and the `.btn-primary`/`.btn-danger` family stays coherent. Rewriting
+    them inline would have produced 28 scattered edits and left the design system still broken for
+    the next component that reaches for `.btn-secondary`.
+  - **Guidance:** before adding a `className`, confirm the selector exists in `index.css` — an
+    undefined class fails **silently** into UA defaults (white button on a dark cockpit) and is
+    invisible to `tsc`, to `npm run build`, and to a screenshot skim. Verify with computed styles
+    (`getComputedStyle(...).backgroundColor === 'rgb(239, 239, 239)'` catches exactly this),
+    not by eye.
+  - **Also recorded:** `src-ui/src/vite-env.d.ts` never existed, so `tsc` failed on every CSS
+    side-effect import (`TS2882`) and `npm run build` was red on `main` despite journal entries
+    claiming green. Added the standard Vite scaffold reference. **Trust the verify loop over the
+    journal.**
 
 - 2026-09-22 — **IaC & Terraform Reviewer Backend Wiring & Cockpit View Shipped (Antigravity).**
   - **Read-Only Scanner (`IacSource`)**: Implemented `IacSource` in `airlock-discovery` scanning Terraform HCL manifests for security misconfigurations (`CKV_AWS_260`, `CKV_AWS_18`, `CKV_AWS_161`, `CKV_AWS_157`, `CKV_AWS_109`). All attributes, risk descriptions, recommendations, and diff snippets pass through `ContextEngine::redact_secrets` before leaving the scanner boundary (Invariant #2).

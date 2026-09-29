@@ -32,7 +32,7 @@ import { ConnectionModal } from './ConnectionModal';
 import { HostKeyTrustModal } from './HostKeyTrustModal';
 import { SftpViewerModal } from './SftpViewerModal';
 
-const isTauri = typeof window !== 'undefined' && '__TAURI_IPC__' in window;
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 const SAMPLE_CONNECTIONS: SavedConnection[] = [
   {
@@ -127,6 +127,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ currentEnv: _c
   const xtermRef = useRef<XTerm | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const unlistenRef = useRef<UnlistenFn | null>(null);
+  const onDataDisposableRef = useRef<{ dispose: () => void } | null>(null);
 
   // Load Connections Catalog
   const refreshCatalog = useCallback(async () => {
@@ -154,7 +155,9 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ currentEnv: _c
   // Handle Save Connection
   const handleSaveConnection = async (conn: SavedConnection, secret?: string) => {
     if (isTauri) {
-      await invoke('conn_save', { conn, secret: secret || null });
+      // `secret ?? null`, not `secret || null`: an empty string is meaningful here — it records
+      // an unencrypted private key — and `||` would collapse it to "no secret stored".
+      await invoke('conn_save', { conn, secret: secret ?? null });
       await refreshCatalog();
     } else {
       setConnections((prev) => {
@@ -272,6 +275,16 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ currentEnv: _c
     setConnecting(true);
     setConnError(null);
 
+    // Clean up any existing listeners/sessions
+    if (unlistenRef.current) {
+      unlistenRef.current();
+      unlistenRef.current = null;
+    }
+    if (onDataDisposableRef.current) {
+      onDataDisposableRef.current.dispose();
+      onDataDisposableRef.current = null;
+    }
+
     const term = xtermRef.current;
     if (term) {
       term.clear();
@@ -288,7 +301,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ currentEnv: _c
           term.write(`Linux ${conn.name} 6.8.0-45-generic #45-Ubuntu SMP\r\n`);
           term.write(`Last login: Mon Sep 21 11:42:10 2026 from 10.200.0.99\r\n\r\n`);
           term.write(`${conn.username || 'user'}@${conn.name}:~$ `);
-          term.onData((data) => {
+          onDataDisposableRef.current = term.onData((data) => {
             if (data === '\r') {
               term.write('\r\ncommand acknowledged\r\n');
               term.write(`${conn.username || 'user'}@${conn.name}:~$ `);
@@ -331,7 +344,7 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ currentEnv: _c
         unlistenRef.current = unlisten;
 
         // 3. Send user keystrokes to conn_write
-        term.onData(async (data) => {
+        onDataDisposableRef.current = term.onData(async (data) => {
           const encoder = new TextEncoder();
           const bytes = Array.from(encoder.encode(data));
           try {
@@ -369,6 +382,10 @@ export const ConnectionsView: React.FC<ConnectionsViewProps> = ({ currentEnv: _c
     if (unlistenRef.current) {
       unlistenRef.current();
       unlistenRef.current = null;
+    }
+    if (onDataDisposableRef.current) {
+      onDataDisposableRef.current.dispose();
+      onDataDisposableRef.current = null;
     }
     setActiveSessionId(null);
     setConnecting(false);

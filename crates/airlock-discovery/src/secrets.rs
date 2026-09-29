@@ -379,8 +379,14 @@ mod tests {
         let temp_dir = std::env::temp_dir().join(format!("sec-scan-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&temp_dir).unwrap();
         let test_file = temp_dir.join("test.env");
-        let slack_token_test = format!("xoxb-{}-{}-{}", "123456789012", "123456789012", "abcdefghijklmnopqrstuvwx");
-        let test_content = format!("AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nSLACK_TOKEN={}\n", slack_token_test);
+        let slack_token_test = format!(
+            "xoxb-{}-{}-{}",
+            "123456789012", "123456789012", "abcdefghijklmnopqrstuvwx"
+        );
+        let test_content = format!(
+            "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nSLACK_TOKEN={}\n",
+            slack_token_test
+        );
         std::fs::write(&test_file, test_content).unwrap();
 
         let source = SecretsSource::new();

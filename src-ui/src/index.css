@@ -457,6 +457,7 @@ body {
 .btn {
   padding: 6px 12px;
   border-radius: 6px;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -476,6 +477,62 @@ body {
 .btn-danger {
   background-color: var(--accent-rose);
   color: #fff;
+}
+
+.btn-secondary {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-muted);
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--border-bright);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Compact action button — telemetry toolbar, PromQL console, preset queries */
+.action-btn {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-muted);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.action-btn:hover:not(:disabled) {
+  background-color: var(--bg-surface-hover);
+  border-color: var(--accent-cyan);
+}
+
+.action-btn.primary {
+  background-color: var(--accent-emerald);
+  border-color: var(--accent-emerald);
+  color: #04120c;
+}
+.action-btn.primary:hover:not(:disabled) {
+  background-color: #34d399;
+  border-color: #34d399;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Applies the @keyframes spin defined below to loading icons */
+.spin {
+  animation: spin 1s linear infinite;
 }
 
 .chat-input-area {

@@ -39,7 +39,7 @@ import {
 
 const LAYOUTS_KEY = 'airlock.terminal.layouts.v1';
 
-const isTauri = typeof window !== 'undefined' && '__TAURI_IPC__' in window;
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 const readLayouts = (): Record<string, PaneTreeNode> => {
   try {
@@ -200,23 +200,22 @@ export const TerminalView: React.FC<TerminalViewProps> = ({ initialCommand, env 
       return;
     }
 
-    let cancelled = false;
+    // No cancellation guard here: `bootedRef` already makes this run exactly once, and
+    // StrictMode's dev remount would otherwise cancel the only in-flight boot (its cleanup
+    // fires before the await resolves, and the second mount returns early), leaving the
+    // workspace with zero panes.
     void (async () => {
       try {
         const existing = await invoke<string[]>('terminal_list_sessions');
-        if (cancelled) return;
         if (existing && existing.length > 0) {
           bootTabs([makeTab('Workspace 1', buildChainFromSessions(existing))]);
         } else {
           bootTabs([makeTab('Workspace 1')]);
         }
       } catch {
-        if (!cancelled) bootTabs([makeTab('Workspace 1')]);
+        bootTabs([makeTab('Workspace 1')]);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
   }, [bootTabs, makeTab]);
 
   const handleRegister = useCallback((handle: TermPaneHandle) => {

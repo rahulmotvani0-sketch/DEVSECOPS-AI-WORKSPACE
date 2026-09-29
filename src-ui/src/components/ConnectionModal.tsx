@@ -130,7 +130,12 @@ export const ConnectionModal: React.FC<ConnectionModalProps> = ({
     };
 
     try {
-      await onSave(newConn, secret ? secret : undefined);
+      // For public-key auth the stored secret is the key *passphrase*, and an empty string is
+      // the documented way to say "this key is unencrypted". Sending undefined instead would
+      // store no keychain entry at all, and conn_open would then fail CONN_SECRET_MISSING —
+      // making unencrypted keys unusable despite the field being labelled optional.
+      const secretToStore = authMethod === 'publickey' ? secret : secret || undefined;
+      await onSave(newConn, secretToStore);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

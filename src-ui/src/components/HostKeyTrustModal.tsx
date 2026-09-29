@@ -12,7 +12,7 @@ interface HostKeyTrustModalProps {
   onTrusted: (fingerprint: string) => void;
 }
 
-const isTauri = typeof window !== 'undefined' && '__TAURI_IPC__' in window;
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 export const HostKeyTrustModal: React.FC<HostKeyTrustModalProps> = ({
   isOpen,

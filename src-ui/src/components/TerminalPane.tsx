@@ -37,7 +37,7 @@ export interface TerminalPaneProps {
   onClosePane: (paneId: string) => void;
 }
 
-const isTauri = typeof window !== 'undefined' && '__TAURI_IPC__' in window;
+const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 export const TerminalPane: React.FC<TerminalPaneProps> = ({
   paneId,
@@ -62,6 +62,7 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
   const searchAddonRef = useRef<SearchAddon | null>(null);
   const unlistenRef = useRef<UnlistenFn | null>(null);
   const attachCancelledRef = useRef(false);
+  const attachSeqRef = useRef(0);
   const resolveStartedRef = useRef(false);
   const lastSearchTermRef = useRef('');
   const mockBufferRef = useRef('');
@@ -434,6 +435,11 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
     async (sid: string) => {
       if (!isTauri) return;
       attachCancelledRef.current = false;
+      // Identifies this attach so a superseded one (StrictMode remounts this effect, and both
+      // attaches can be in flight at once) never keeps its listener. Without this, each attach
+      // registered another pty_output_<sid> listener and overwrote unlistenRef, leaking the
+      // previous one — every PTY byte was then written to the terminal twice.
+      const attachSeq = ++attachSeqRef.current;
       try {
         const backlog: number[] = await invoke('terminal_read', { sessionId: sid });
         if (!attachCancelledRef.current && backlog && backlog.length > 0) {
@@ -456,9 +462,10 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
           term.write(new Uint8Array(payload as Uint8Array));
         }
       });
-      if (attachCancelledRef.current) {
+      if (attachCancelledRef.current || attachSeq !== attachSeqRef.current) {
         unlisten();
       } else {
+        unlistenRef.current?.();
         unlistenRef.current = unlisten;
       }
       setTimeout(() => fitToContainer(), 30);
@@ -472,6 +479,9 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
     const term = new XTerm({
       cursorBlink: true,
       cursorStyle: 'block',
+      // Required by SEARCH_OPTIONS.decorations: the search addon highlights matches via
+      // registerDecoration(), which is proposed API and throws without this flag.
+      allowProposedApi: true,
       fontFamily: 'JetBrains Mono, Fira Code, Menlo, monospace',
       fontSize: 12.5,
       lineHeight: 1.25,
@@ -611,7 +621,7 @@ export const TerminalPane: React.FC<TerminalPaneProps> = ({
 
   useEffect(() => {
     const term = xtermRef.current;
-    if (!term || !isTauri) return;
+    if (!term) return;
     if (!search || !search.term.trim()) {
       searchAddonRef.current?.clearDecorations();
       lastSearchTermRef.current = '';
