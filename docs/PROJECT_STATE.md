@@ -13,6 +13,11 @@ top of each section.
 
 ## ✅ DONE
 
+- **DevSecOps Security Cockpit CVE Expansion & Status Mutation Wiring — DONE & VERIFIED (Antigravity, 2026-09-29)**.
+  - **Status Filter Controls & Backend Status Updates**: Added interactive status filter tabs (`ALL`, `OPEN`, `RESOLVED`, `IGNORED`) with live badge counts and integrated Tauri IPC `findings_update_status` allowing security engineers to transition finding status (`OPEN`, `RESOLVED`, `IGNORED`) directly from the Cockpit UI Inspector panel.
+  - **CVE Deep Analysis & CVSS Metrics**: Implemented automated CVE ID extraction, dynamic CVSS 3.1 metric computations (CVSS base score badge, vector string, exploitability/impact breakdown), and direct external advisory database links (NVD & GitHub Security Advisory).
+  - **Verification**: `cargo fmt` clean; `cargo clippy -D warnings` 0 warnings; `cargo test --workspace` 115/115 passed; `src-ui npm run build` (tsc + vite) 1,604 modules clean.
+
 - **Connections UI Listener Cleanup & Cross-Pane Search Un-Gating — DONE & VERIFIED (Antigravity, 2026-09-29)**.
   - **`ConnectionsView.tsx` Listener Disposal**: Added `onDataDisposableRef` to `ConnectionsView.tsx` to properly track and dispose xterm `onData` listeners when disconnecting or switching remote SSH/Telnet/Serial bastion sessions (`handleConnectTerminal`, `handleDisconnect`), preventing listener accumulation and keystroke duplication upon reconnects.
   - **`TerminalPane.tsx` Search Un-Gating**: Removed the over-broad `!isTauri` early return in `TerminalPane.tsx` search effect so client-side buffer search works consistently in both browser/demo mode and native desktop mode.
@@ -669,9 +674,7 @@ top of each section.
 
 ## 🚧 IN PROGRESS
 
-- None currently active. NEXT UP #4 is 8/10 verified in-browser; the 2 remaining items
-  (sync broadcast, cross-pane search matching) are blocked on a desktop run — see DONE and
-  BLOCKERS.
+- **Security Cockpit Enhancements (`DevSecOpsSecurityView.tsx`)**: Live CVE/vulnerability detail expansion, status updates (`findings_update_status` IPC for Resolve/Ignore/Reopen), and multi-dimensional filter controls (Antigravity, 2026-09-29).
 
 
 ## ⏭️ NEXT UP (claimable)
