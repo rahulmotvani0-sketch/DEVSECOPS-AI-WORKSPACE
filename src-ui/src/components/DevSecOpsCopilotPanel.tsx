@@ -139,6 +139,7 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
   return (
     <aside
       aria-label="Airlock AI Copilot Panel"
+      className="copilot-panel-responsive"
       style={{
         width: 380,
         flexShrink: 0,

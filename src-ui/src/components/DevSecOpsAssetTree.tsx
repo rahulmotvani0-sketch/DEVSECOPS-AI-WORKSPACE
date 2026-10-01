@@ -69,6 +69,7 @@ export const DevSecOpsAssetTree: React.FC<DevSecOpsAssetTreeProps> = ({
   return (
     <aside
       aria-label="Cluster & Terminal Asset Tree"
+      className="asset-tree-responsive"
       style={{
         width: 236,
         flexShrink: 0,

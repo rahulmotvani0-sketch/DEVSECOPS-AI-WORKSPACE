@@ -624,3 +624,65 @@ button, input, select, textarea, .tree-item, .tab-button, .menu-item-hover, .qui
   to { transform: rotate(360deg); }
 }
 
+/* Responsive Viewport Adaptation & Resolution Flexibility */
+@media (max-width: 1280px) {
+  .copilot-panel-responsive {
+    width: 300px !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .asset-tree-responsive {
+    width: 180px !important;
+  }
+  .copilot-panel-responsive {
+    width: 280px !important;
+  }
+  .header-hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .asset-tree-responsive {
+    display: none !important;
+  }
+  .copilot-panel-responsive {
+    position: absolute !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 320px !important;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.7) !important;
+    z-index: 50 !important;
+  }
+}
+
+/* Scrollbar & Overflow Handling for Flexible Layouts */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.flexible-workspace-scroll {
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0f172a;
+}
+
+.flexible-workspace-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.flexible-workspace-scroll::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.flexible-workspace-scroll::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
