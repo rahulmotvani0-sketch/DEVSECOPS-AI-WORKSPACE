@@ -198,22 +198,42 @@ export const App: React.FC = () => {
 
   const isDraggingLeftRef = React.useRef(false);
   const isDraggingRightRef = React.useRef(false);
+  const appAnimationFrameRef = React.useRef<number | null>(null);
+  const currentLeftWidthRef = React.useRef(assetTreeWidth);
+  const currentRightWidthRef = React.useRef(copilotWidth);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingLeftRef.current && !isDraggingRightRef.current) return;
+
       if (isDraggingLeftRef.current) {
-        const newWidth = Math.max(140, Math.min(480, e.clientX - 48));
-        setAssetTreeWidth(newWidth);
-        localStorage.setItem('airlock.layout.assetTreeWidth', newWidth.toString());
+        const newWidth = Math.max(140, Math.min(500, e.clientX - 48));
+        currentLeftWidthRef.current = newWidth;
       } else if (isDraggingRightRef.current) {
-        const newWidth = Math.max(240, Math.min(650, window.innerWidth - e.clientX));
-        setCopilotWidth(newWidth);
-        localStorage.setItem('airlock.layout.copilotWidth', newWidth.toString());
+        const newWidth = Math.max(240, Math.min(700, window.innerWidth - e.clientX));
+        currentRightWidthRef.current = newWidth;
+      }
+
+      if (appAnimationFrameRef.current === null) {
+        appAnimationFrameRef.current = requestAnimationFrame(() => {
+          if (isDraggingLeftRef.current) {
+            setAssetTreeWidth(currentLeftWidthRef.current);
+          } else if (isDraggingRightRef.current) {
+            setCopilotWidth(currentRightWidthRef.current);
+          }
+          appAnimationFrameRef.current = null;
+        });
       }
     };
 
     const handleMouseUp = () => {
       if (isDraggingLeftRef.current || isDraggingRightRef.current) {
+        if (isDraggingLeftRef.current) {
+          localStorage.setItem('airlock.layout.assetTreeWidth', currentLeftWidthRef.current.toString());
+        }
+        if (isDraggingRightRef.current) {
+          localStorage.setItem('airlock.layout.copilotWidth', currentRightWidthRef.current.toString());
+        }
         isDraggingLeftRef.current = false;
         isDraggingRightRef.current = false;
         document.body.style.cursor = 'default';
@@ -226,6 +246,9 @@ export const App: React.FC = () => {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      if (appAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(appAnimationFrameRef.current);
+      }
     };
   }, []);
 

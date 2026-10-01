@@ -99,19 +99,30 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanMessage, setScanMessage] = useState<string | null>(null);
 
-  // Resizable Split Pane State
+  // Resizable Split Pane State (Ultra-stable relative positioning)
   const [leftWidth, setLeftWidth] = useState<number>(() => {
     const saved = localStorage.getItem('airlock.layout.iacLeftWidth');
     return saved ? parseInt(saved, 10) : 420;
   });
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const isDraggingRef = React.useRef(false);
+  const animationFrameRef = React.useRef<number | null>(null);
+  const currentWidthRef = React.useRef(leftWidth);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDraggingRef.current) {
-        const newWidth = Math.max(260, Math.min(850, e.clientX - 280));
-        setLeftWidth(newWidth);
-        localStorage.setItem('airlock.layout.iacLeftWidth', newWidth.toString());
+      if (!isDraggingRef.current || !containerRef.current) return;
+      
+      const rect = containerRef.current.getBoundingClientRect();
+      const relativeX = e.clientX - rect.left;
+      const clampedWidth = Math.max(260, Math.min(rect.width - 240, relativeX));
+      currentWidthRef.current = clampedWidth;
+
+      if (animationFrameRef.current === null) {
+        animationFrameRef.current = requestAnimationFrame(() => {
+          setLeftWidth(currentWidthRef.current);
+          animationFrameRef.current = null;
+        });
       }
     };
 
@@ -120,6 +131,7 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
         isDraggingRef.current = false;
         document.body.style.cursor = 'default';
         document.body.style.userSelect = 'auto';
+        localStorage.setItem('airlock.layout.iacLeftWidth', currentWidthRef.current.toString());
       }
     };
 
@@ -128,6 +140,9 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      if (animationFrameRef.current !== null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, []);
 
@@ -508,7 +523,7 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
       )}
 
       {/* Split Grid */}
-      <div className="responsive-split-container" style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
+      <div ref={containerRef} className="responsive-split-container" style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
         {/* Left List */}
         <div
           style={{
