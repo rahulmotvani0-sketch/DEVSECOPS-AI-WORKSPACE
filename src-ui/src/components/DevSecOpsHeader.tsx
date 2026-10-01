@@ -62,6 +62,8 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
 
   return (
     <header
+      data-tauri-drag-region
+      onDoubleClick={handleMaximize}
       style={{
         height: '42px',
         backgroundColor: '#0a0d14',
@@ -77,11 +79,11 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
       }}
     >
       {/* Left: Product Identity + Cluster Context */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} data-tauri-drag-region>
         {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }} data-tauri-drag-region>
           <Shield size={17} color="#10b981" strokeWidth={2.4} />
-          <span style={{ fontWeight: 700, fontSize: '14px', color: '#f8fafc', letterSpacing: '0.4px' }}>
+          <span style={{ fontWeight: 700, fontSize: '14px', color: '#f8fafc', letterSpacing: '0.4px' }} data-tauri-drag-region>
             Airlock <span style={{ color: '#64748b', fontWeight: 600 }}>Operations Cockpit</span>
           </span>
         </div>
@@ -180,7 +182,7 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
       </div>
 
       {/* Center: Real-Time Operational Signals */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} data-tauri-drag-region>
         <button
           onClick={onOpenIncidents}
           style={{
@@ -203,6 +205,7 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
         </button>
 
         <div
+          data-tauri-drag-region
           style={{
             padding: '3px 8px',
             backgroundColor: 'rgba(245, 158, 11, 0.1)',
@@ -218,9 +221,10 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
       </div>
 
       {/* Right: Policy Security Gate, Settings, Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} data-tauri-drag-region>
         {/* Policy Guard Badge */}
         <div
+          data-tauri-drag-region
           style={{
             padding: '3px 8px',
             backgroundColor: '#111724',
