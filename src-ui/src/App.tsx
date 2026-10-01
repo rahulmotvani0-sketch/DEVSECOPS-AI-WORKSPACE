@@ -20,6 +20,11 @@ import { TopologyView } from './components/TopologyView';
 import { TerminalView } from './components/TerminalView';
 import { DevSecOpsMetricsStrip } from './components/DevSecOpsMetricsStrip';
 import { AIGatewayModal } from './components/AIGatewayModal';
+import {
+  UICustomizationModal,
+  UICustomizationState,
+  DEFAULT_UI_CUSTOMIZATION,
+} from './components/UICustomizationModal';
 import { InlineAIPrompt } from './components/InlineAIPrompt';
 import { ComposerModal } from './components/ComposerModal';
 import { CommandPalette } from './components/CommandPalette';
@@ -120,7 +125,109 @@ export const App: React.FC = () => {
   const [currentEnv, setCurrentEnv] = useState<EnvironmentTier>('Production');
   const [isCopilotOpen, setIsCopilotOpen] = useState(true);
   const [isAIGatewayOpen, setIsAIGatewayOpen] = useState(false);
+  const [isUICustomizationOpen, setIsUICustomizationOpen] = useState(false);
   const [aiMode, setAiMode] = useState<AIMode>('AUTO');
+
+  // Full UI Customization State
+  const [uiCustomization, setUiCustomization] = useState<UICustomizationState>(() => {
+    const saved = localStorage.getItem('airlock.ui_customization');
+    if (saved) {
+      try {
+        return { ...DEFAULT_UI_CUSTOMIZATION, ...JSON.parse(saved) };
+      } catch {
+        // Fallback
+      }
+    }
+    return DEFAULT_UI_CUSTOMIZATION;
+  });
+
+  // Custom Panel Widths & Layout Customization State
+  const [assetTreeWidth, setAssetTreeWidth] = useState<number>(() => {
+    const saved = localStorage.getItem('airlock.layout.assetTreeWidth');
+    return saved ? parseInt(saved, 10) : uiCustomization.assetTreeWidth;
+  });
+  const [copilotWidth, setCopilotWidth] = useState<number>(() => {
+    const saved = localStorage.getItem('airlock.layout.copilotWidth');
+    return saved ? parseInt(saved, 10) : uiCustomization.copilotWidth;
+  });
+  const [isAssetTreeOpen, setIsAssetTreeOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem('airlock.layout.isAssetTreeOpen');
+    return saved !== null ? saved === 'true' : uiCustomization.isAssetTreeOpen;
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', uiCustomization.theme);
+    document.documentElement.setAttribute('data-density', uiCustomization.density);
+    document.documentElement.setAttribute('data-fontsize', uiCustomization.fontSize);
+    localStorage.setItem('airlock.ui_customization', JSON.stringify(uiCustomization));
+  }, [uiCustomization]);
+
+  const handleUpdateCustomization = (updated: Partial<UICustomizationState>) => {
+    setUiCustomization((prev) => {
+      const next = { ...prev, ...updated };
+      if (updated.assetTreeWidth !== undefined) {
+        setAssetTreeWidth(updated.assetTreeWidth);
+        localStorage.setItem('airlock.layout.assetTreeWidth', updated.assetTreeWidth.toString());
+      }
+      if (updated.copilotWidth !== undefined) {
+        setCopilotWidth(updated.copilotWidth);
+        localStorage.setItem('airlock.layout.copilotWidth', updated.copilotWidth.toString());
+      }
+      if (updated.isAssetTreeOpen !== undefined) {
+        setIsAssetTreeOpen(updated.isAssetTreeOpen);
+        localStorage.setItem('airlock.layout.isAssetTreeOpen', updated.isAssetTreeOpen.toString());
+      }
+      if (updated.isCopilotOpen !== undefined) {
+        setIsCopilotOpen(updated.isCopilotOpen);
+      }
+      return next;
+    });
+  };
+
+  const handleResetCustomization = () => {
+    setUiCustomization(DEFAULT_UI_CUSTOMIZATION);
+    setAssetTreeWidth(DEFAULT_UI_CUSTOMIZATION.assetTreeWidth);
+    setCopilotWidth(DEFAULT_UI_CUSTOMIZATION.copilotWidth);
+    setIsAssetTreeOpen(DEFAULT_UI_CUSTOMIZATION.isAssetTreeOpen);
+    setIsCopilotOpen(DEFAULT_UI_CUSTOMIZATION.isCopilotOpen);
+    localStorage.removeItem('airlock.ui_customization');
+    localStorage.removeItem('airlock.layout.assetTreeWidth');
+    localStorage.removeItem('airlock.layout.copilotWidth');
+    localStorage.removeItem('airlock.layout.isAssetTreeOpen');
+  };
+
+  const isDraggingLeftRef = React.useRef(false);
+  const isDraggingRightRef = React.useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingLeftRef.current) {
+        const newWidth = Math.max(140, Math.min(480, e.clientX - 48));
+        setAssetTreeWidth(newWidth);
+        localStorage.setItem('airlock.layout.assetTreeWidth', newWidth.toString());
+      } else if (isDraggingRightRef.current) {
+        const newWidth = Math.max(240, Math.min(650, window.innerWidth - e.clientX));
+        setCopilotWidth(newWidth);
+        localStorage.setItem('airlock.layout.copilotWidth', newWidth.toString());
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isDraggingLeftRef.current || isDraggingRightRef.current) {
+        isDraggingLeftRef.current = false;
+        isDraggingRightRef.current = false;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   // Interactive IDE / Modals
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -299,6 +406,7 @@ export const App: React.FC = () => {
         }}
         currentEnv={currentEnv}
         onOpenSettings={() => setIsAIGatewayOpen(true)}
+        onOpenUICustomization={() => setIsUICustomizationOpen(true)}
         onOpenIncidents={() => setDevsecopsView('incidents')}
       />
 
@@ -318,27 +426,64 @@ export const App: React.FC = () => {
           onSelectView={setDevsecopsView}
           isCopilotOpen={isCopilotOpen}
           onToggleCopilot={() => setIsCopilotOpen((prev) => !prev)}
+          isAssetTreeOpen={isAssetTreeOpen}
+          onToggleAssetTree={() => {
+            setIsAssetTreeOpen((prev) => {
+              const next = !prev;
+              localStorage.setItem('airlock.layout.isAssetTreeOpen', next.toString());
+              return next;
+            });
+          }}
           onOpenSettings={() => setIsAIGatewayOpen(true)}
+          onOpenUICustomization={() => setIsUICustomizationOpen(true)}
           activeIncidentCount={1}
           deploymentRiskCount={1}
           securityFindingCount={4}
         />
 
-        {/* Left Asset Tree: CLUSTERS + TERMINAL (Cosmic / README panel) */}
-        <DevSecOpsAssetTree
-          currentCluster={currentCluster}
-          currentEnv={currentEnv}
-          onSelectCluster={(c) => {
-            setCurrentCluster(c);
-            if (c.includes('prod')) setCurrentEnv('Production');
-            else if (c.includes('staging')) setCurrentEnv('Staging');
-            else setCurrentEnv('Development');
-          }}
-          onSelectView={setDevsecopsView}
-          onRunCopilot={() => {
-            setIsCopilotOpen(true);
-          }}
-        />
+        {/* Left Asset Tree: CLUSTERS + TERMINAL */}
+        {isAssetTreeOpen && (
+          <>
+            <DevSecOpsAssetTree
+              currentCluster={currentCluster}
+              currentEnv={currentEnv}
+              onSelectCluster={(c) => {
+                setCurrentCluster(c);
+                if (c.includes('prod')) setCurrentEnv('Production');
+                else if (c.includes('staging')) setCurrentEnv('Staging');
+                else setCurrentEnv('Development');
+              }}
+              onSelectView={setDevsecopsView}
+              onRunCopilot={() => {
+                setIsCopilotOpen(true);
+              }}
+              customWidth={assetTreeWidth}
+            />
+
+            {/* Left Resizer Drag Handle */}
+            <div
+              onMouseDown={(e) => {
+                e.preventDefault();
+                isDraggingLeftRef.current = true;
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+              }}
+              style={{
+                width: '4px',
+                cursor: 'col-resize',
+                backgroundColor: 'transparent',
+                transition: 'background-color 0.15s ease',
+                zIndex: 25,
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
+              onMouseLeave={(e) => {
+                if (!isDraggingLeftRef.current) e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              title="Drag to resize Asset Tree sidebar"
+            />
+          </>
+        )}
 
         {/* Dynamic Center Engineering Workspace */}
         <div
@@ -459,6 +604,31 @@ export const App: React.FC = () => {
           )}
         </div>
 
+        {/* Right Resizer Drag Handle */}
+        {isCopilotOpen && (
+          <div
+            onMouseDown={(e) => {
+              e.preventDefault();
+              isDraggingRightRef.current = true;
+              document.body.style.cursor = 'col-resize';
+              document.body.style.userSelect = 'none';
+            }}
+            style={{
+              width: '4px',
+              cursor: 'col-resize',
+              backgroundColor: 'transparent',
+              transition: 'background-color 0.15s ease',
+              zIndex: 25,
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
+            onMouseLeave={(e) => {
+              if (!isDraggingRightRef.current) e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+            title="Drag to resize Copilot panel"
+          />
+        )}
+
         {/* Right AIRLOCK COPILOT Panel (Cosmic: always present) */}
         {isCopilotOpen ? (
           <DevSecOpsCopilotPanel
@@ -468,6 +638,7 @@ export const App: React.FC = () => {
             onClose={() => setIsCopilotOpen(false)}
             onOpenSettings={() => setIsAIGatewayOpen(true)}
             onExecuteCommand={handleExecutePatch}
+            customWidth={copilotWidth}
           />
         ) : (
           <button
@@ -507,6 +678,15 @@ export const App: React.FC = () => {
         onClose={() => setIsAIGatewayOpen(false)}
         currentMode={aiMode}
         onModeChange={(mode) => setAiMode(mode)}
+      />
+
+      {/* 4b. UI Layout & Theme Customization Modal */}
+      <UICustomizationModal
+        isOpen={isUICustomizationOpen}
+        onClose={() => setIsUICustomizationOpen(false)}
+        customization={uiCustomization}
+        onUpdateCustomization={handleUpdateCustomization}
+        onResetCustomization={handleResetCustomization}
       />
 
       {/* 5. Floating Inline AI Bar (Ctrl+K) */}

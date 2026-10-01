@@ -11,11 +11,13 @@ import {
   History,
   Bot,
   Settings,
+  Palette,
   Shield,
   Network,
   KeyRound,
   Boxes,
   Sparkles,
+  PanelLeft,
 } from 'lucide-react';
 import { DevSecOpsView } from '../types';
 
@@ -24,7 +26,10 @@ interface DevSecOpsActivityBarProps {
   onSelectView: (view: DevSecOpsView) => void;
   isCopilotOpen: boolean;
   onToggleCopilot: () => void;
+  isAssetTreeOpen?: boolean;
+  onToggleAssetTree?: () => void;
   onOpenSettings: () => void;
+  onOpenUICustomization?: () => void;
   activeIncidentCount?: number;
   deploymentRiskCount?: number;
   securityFindingCount?: number;
@@ -35,7 +40,10 @@ export const DevSecOpsActivityBar: React.FC<DevSecOpsActivityBarProps> = ({
   onSelectView,
   isCopilotOpen,
   onToggleCopilot,
+  isAssetTreeOpen,
+  onToggleAssetTree,
   onOpenSettings,
+  onOpenUICustomization,
   activeIncidentCount = 1,
   deploymentRiskCount = 1,
   securityFindingCount = 4,
@@ -88,12 +96,35 @@ export const DevSecOpsActivityBar: React.FC<DevSecOpsActivityBarProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '6px',
+            marginBottom: '4px',
             cursor: 'pointer',
           }}
         >
           <Shield size={18} color="#10b981" strokeWidth={2.2} />
         </div>
+
+        {/* Sidebar Toggle Button */}
+        {onToggleAssetTree && (
+          <button
+            onClick={onToggleAssetTree}
+            title={isAssetTreeOpen ? "Collapse Asset Tree Sidebar" : "Expand Asset Tree Sidebar"}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '6px',
+              border: 'none',
+              backgroundColor: isAssetTreeOpen ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+              color: isAssetTreeOpen ? '#38bdf8' : '#64748b',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              marginBottom: '6px',
+            }}
+          >
+            <PanelLeft size={17} />
+          </button>
+        )}
 
         {/* Primary Product Areas */}
         {navItems.map((item) => {
@@ -196,6 +227,29 @@ export const DevSecOpsActivityBar: React.FC<DevSecOpsActivityBarProps> = ({
             }}
           />
         </button>
+
+        {/* UI Theme & Layout Customization */}
+        {onOpenUICustomization && (
+          <button
+            onClick={onOpenUICustomization}
+            title="UI Layout & Theme Customization"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#64748b',
+              cursor: 'pointer',
+              padding: '5px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#06b6d4')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+          >
+            <Palette size={17} />
+          </button>
+        )}
 
         {/* AI Gateway & Model Routing Settings */}
         <button

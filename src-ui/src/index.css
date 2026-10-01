@@ -686,3 +686,48 @@ html, body, #root {
   border-radius: 3px;
 }
 
+/* UI Customization Theme Presets & Density Modifiers */
+[data-theme="emerald"] {
+  --bg-app: #070d0a;
+  --bg-surface: #0d1a14;
+  --accent-cyan: #10b981;
+  --text-accent: #34d399;
+}
+
+[data-theme="violet"] {
+  --bg-app: #0a0612;
+  --bg-surface: #140d24;
+  --accent-cyan: #a855f7;
+  --text-accent: #c084fc;
+}
+
+[data-theme="amber"] {
+  --bg-app: #0e0c08;
+  --bg-surface: #1a1610;
+  --accent-cyan: #f59e0b;
+  --text-accent: #fbbf24;
+}
+
+[data-theme="slate"] {
+  --bg-app: #0b1120;
+  --bg-surface: #162032;
+  --accent-cyan: #38bdf8;
+  --text-accent: #60a5fa;
+}
+
+/* Typography & Density Scaling */
+[data-fontsize="compact"] body {
+  font-size: 12px !important;
+}
+
+[data-fontsize="large"] body {
+  font-size: 14px !important;
+}
+
+[data-density="compact"] button,
+[data-density="compact"] input {
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+}
+
+

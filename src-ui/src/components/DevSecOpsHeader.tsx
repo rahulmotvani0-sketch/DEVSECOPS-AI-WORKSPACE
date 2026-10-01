@@ -4,6 +4,7 @@ import {
   Shield,
   ChevronDown,
   Settings,
+  Palette,
   Minus,
   Square,
   X,
@@ -18,6 +19,7 @@ interface DevSecOpsHeaderProps {
   onSelectCluster: (cluster: string) => void;
   currentEnv: EnvironmentTier;
   onOpenSettings: () => void;
+  onOpenUICustomization?: () => void;
   onOpenIncidents?: () => void;
 }
 
@@ -26,6 +28,7 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
   onSelectCluster,
   currentEnv,
   onOpenSettings,
+  onOpenUICustomization,
   onOpenIncidents,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -250,6 +253,29 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
           <Lock size={11} color="#10b981" />
           <span>Policy Guard: <strong style={{ color: '#10b981' }}>ENFORCED</strong></span>
         </div>
+
+        {/* Customize UI Theme & Layout */}
+        {onOpenUICustomization && (
+          <button
+            onClick={onOpenUICustomization}
+            title="Customize UI Theme, Colors & Panel Layout"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              padding: '5px',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#06b6d4')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
+          >
+            <Palette size={16} />
+          </button>
+        )}
 
         {/* AI Gateway Settings */}
         <button

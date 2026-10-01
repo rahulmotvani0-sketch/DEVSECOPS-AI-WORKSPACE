@@ -18,6 +18,7 @@ interface DevSecOpsCopilotPanelProps {
   onClose?: () => void;
   onOpenSettings?: () => void;
   onExecuteCommand?: (command: string) => void;
+  customWidth?: number;
 }
 
 interface StructuredInvestigation {
@@ -44,7 +45,8 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
   aiMode,
   onClose,
   onOpenSettings,
-  onExecuteCommand
+  onExecuteCommand,
+  customWidth,
 }) => {
   const [inputVal, setInputVal] = useState('');
   const [selectedModel, setSelectedModel] = useState('qwen2.5-coder (Local)');
@@ -141,7 +143,7 @@ export const DevSecOpsCopilotPanel: React.FC<DevSecOpsCopilotPanelProps> = ({
       aria-label="Airlock AI Copilot Panel"
       className="copilot-panel-responsive"
       style={{
-        width: 380,
+        width: customWidth ?? 380,
         flexShrink: 0,
         borderLeft: '1px solid #1a2232',
         backgroundColor: '#0b0f17',

@@ -19,6 +19,7 @@ interface DevSecOpsAssetTreeProps {
   onSelectCluster: (cluster: string, tier: EnvironmentTier) => void;
   onSelectView: (view: DevSecOpsView) => void;
   onRunCopilot: (query: string) => void;
+  customWidth?: number;
 }
 
 const tierDotColor = (tier: EnvironmentTier): string => {
@@ -38,6 +39,7 @@ export const DevSecOpsAssetTree: React.FC<DevSecOpsAssetTreeProps> = ({
   onSelectCluster,
   onSelectView,
   onRunCopilot,
+  customWidth,
 }) => {
   const [openClusters, setOpenClusters] = useState<Record<string, boolean>>({ [currentCluster]: true });
   const [termCmd, setTermCmd] = useState('airlock why checkout-api');
@@ -71,7 +73,7 @@ export const DevSecOpsAssetTree: React.FC<DevSecOpsAssetTreeProps> = ({
       aria-label="Cluster & Terminal Asset Tree"
       className="asset-tree-responsive"
       style={{
-        width: 236,
+        width: customWidth ?? 236,
         flexShrink: 0,
         backgroundColor: '#0b0f17',
         borderRight: '1px solid #1a2232',
