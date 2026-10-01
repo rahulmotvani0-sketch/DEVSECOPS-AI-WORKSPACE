@@ -715,7 +715,7 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
       </div>
 
       {/* Main Content Split View */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div className="responsive-split-container" style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
         {/* Left Side: Findings List */}
         <div
           style={{
@@ -725,6 +725,7 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
             flexDirection: 'column',
             backgroundColor: '#0a0d14',
             overflowY: 'auto',
+            minWidth: 0,
           }}
         >
           <div
@@ -878,6 +879,7 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
             flexDirection: 'column',
             gap: '16px',
             backgroundColor: '#0c101a',
+            minWidth: 0,
           }}
         >
           {/* Finding Header Card */}

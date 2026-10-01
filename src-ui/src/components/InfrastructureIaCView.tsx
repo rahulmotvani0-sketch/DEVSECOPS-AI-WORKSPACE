@@ -476,17 +476,19 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
       )}
 
       {/* Split Grid */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div className="responsive-split-container" style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
         {/* Left List */}
         <div
           style={{
-            width: '380px',
+            maxWidth: '380px',
+            width: '100%',
+            flex: 1,
+            minWidth: 0,
             borderRight: '1px solid #1a2234',
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#0c111c',
             overflowY: 'auto',
-            flexShrink: 0,
           }}
         >
           <div
@@ -595,6 +597,7 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
             overflowY: 'auto',
             padding: '24px',
             gap: '20px',
+            minWidth: 0,
           }}
         >
           <div
