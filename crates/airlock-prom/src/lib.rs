@@ -373,10 +373,15 @@ pub struct LivePrometheusBackend {
     client: reqwest::Client,
     base_url: String,
     timeout_duration: Duration,
+    custom_headers: HashMap<String, String>,
 }
 
 impl LivePrometheusBackend {
     pub fn new(base_url: String) -> Self {
+        Self::with_headers(base_url, HashMap::new())
+    }
+
+    pub fn with_headers(base_url: String, custom_headers: HashMap<String, String>) -> Self {
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(5))
             .build()
@@ -385,7 +390,20 @@ impl LivePrometheusBackend {
             client,
             base_url,
             timeout_duration: Duration::from_secs(5),
+            custom_headers,
         }
+    }
+
+    fn apply_headers(&self, mut req: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        for (k, v) in &self.custom_headers {
+            if let (Ok(name), Ok(val)) = (
+                reqwest::header::HeaderName::from_bytes(k.as_bytes()),
+                reqwest::header::HeaderValue::from_str(v),
+            ) {
+                req = req.header(name, val);
+            }
+        }
+        req
     }
 }
 
@@ -396,7 +414,7 @@ impl PrometheusBackend for LivePrometheusBackend {
             "{}/api/v1/status/buildinfo",
             self.base_url.trim_end_matches('/')
         );
-        let req = self.client.get(&url);
+        let req = self.apply_headers(self.client.get(&url));
 
         let res = tokio::time::timeout(self.timeout_duration, req.send())
             .await
@@ -433,7 +451,7 @@ impl PrometheusBackend for LivePrometheusBackend {
 
     async fn query_instant(&self, query: &str) -> Result<QueryResult, PrometheusError> {
         let url = format!("{}/api/v1/query", self.base_url.trim_end_matches('/'));
-        let req = self.client.get(&url).query(&[("query", query)]);
+        let req = self.apply_headers(self.client.get(&url).query(&[("query", query)]));
 
         let res = tokio::time::timeout(self.timeout_duration, req.send())
             .await
@@ -531,12 +549,12 @@ impl PrometheusBackend for LivePrometheusBackend {
     ) -> Result<QueryResult, PrometheusError> {
         let url = format!("{}/api/v1/query_range", self.base_url.trim_end_matches('/'));
         let step_str = format!("{}s", step.max(1));
-        let req = self.client.get(&url).query(&[
+        let req = self.apply_headers(self.client.get(&url).query(&[
             ("query", query),
             ("start", &start.to_string()),
             ("end", &end.to_string()),
             ("step", &step_str),
-        ]);
+        ]));
 
         let res = tokio::time::timeout(self.timeout_duration, req.send())
             .await
@@ -621,7 +639,7 @@ impl PrometheusBackend for LivePrometheusBackend {
             "{}/api/v1/label/__name__/values",
             self.base_url.trim_end_matches('/')
         );
-        let req = self.client.get(&url);
+        let req = self.apply_headers(self.client.get(&url));
 
         let res = tokio::time::timeout(self.timeout_duration, req.send())
             .await
@@ -980,5 +998,24 @@ mod tests {
             PrometheusError::BlockedMutation(cmd) => assert!(cmd.contains("alertmanager")),
             other => panic!("Unexpected error: {:?}", other),
         }
+    }
+
+    #[test]
+    fn test_live_prometheus_with_headers() {
+        let mut headers = HashMap::new();
+        headers.insert("X-Scope-OrgID".to_string(), "tenant-123".to_string());
+        headers.insert(
+            "Authorization".to_string(),
+            "Bearer secret-token".to_string(),
+        );
+        let backend = LivePrometheusBackend::with_headers(
+            "http://localhost:9090".to_string(),
+            headers.clone(),
+        );
+        assert_eq!(backend.custom_headers.len(), 2);
+        assert_eq!(
+            backend.custom_headers.get("X-Scope-OrgID").unwrap(),
+            "tenant-123"
+        );
     }
 }

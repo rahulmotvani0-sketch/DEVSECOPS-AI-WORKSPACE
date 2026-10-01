@@ -19,13 +19,13 @@ cd airlock
 
 ### 2. Run Tests across all crates
 ```bash
-cargo test --workspace --exclude airlock-desktop
+cargo test --workspace
 ```
 
 ### 3. Check Lints & Format
 ```bash
 cargo fmt --all -- --check
-cargo clippy --workspace --exclude airlock-desktop -- -D warnings
+cargo clippy --workspace -- -D warnings
 ```
 
 ### 4. Build the Frontend
@@ -70,9 +70,9 @@ Any pull request violating any of these 5 invariants will be automatically rejec
   - `docs: ...`
 
 ### Pull Request Checklist
-- [ ] Code compiles with zero warnings: `cargo clippy --workspace --exclude airlock-desktop -- -D warnings`
+- [ ] Code compiles with zero warnings: `cargo clippy --workspace -- -D warnings`
 - [ ] Code is formatted: `cargo fmt --all -- --check`
-- [ ] Unit and integration tests pass: `cargo test --workspace --exclude airlock-desktop`
+- [ ] Unit and integration tests pass: `cargo test --workspace`
 - [ ] Frontend builds without TypeScript errors: `npm run build` in `src-ui`
 - [ ] No secrets can reach log lines, UI renders, or AI prompts
 - [ ] Conventional commit messages used

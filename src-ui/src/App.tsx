@@ -23,6 +23,7 @@ import { AIGatewayModal } from './components/AIGatewayModal';
 import { InlineAIPrompt } from './components/InlineAIPrompt';
 import { ComposerModal } from './components/ComposerModal';
 import { CommandPalette } from './components/CommandPalette';
+import { ShortcutsModal } from './components/ShortcutsModal';
 import {
   DevSecOpsView,
   EnvironmentTier,
@@ -124,6 +125,7 @@ export const App: React.FC = () => {
   // Interactive IDE / Modals
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const [isTerminalDockOpen, setIsTerminalDockOpen] = useState(false);
   const [isSplitViewOpen, setIsSplitViewOpen] = useState(false);
 
@@ -192,6 +194,9 @@ export const App: React.FC = () => {
       } else if ((e.ctrlKey || e.metaKey) && e.key === '`') {
         e.preventDefault();
         setDevsecopsView('ai-workspace');
+      } else if (e.key === '?' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) {
+        e.preventDefault();
+        setIsShortcutsModalOpen((prev) => !prev);
       }
     };
 
@@ -537,6 +542,12 @@ export const App: React.FC = () => {
             setIsCopilotOpen(true);
           }
         }}
+      />
+
+      {/* 8. Keyboard Shortcuts Cheat-Sheet Modal (?) */}
+      <ShortcutsModal
+        isOpen={isShortcutsModalOpen}
+        onClose={() => setIsShortcutsModalOpen(false)}
       />
     </div>
   );

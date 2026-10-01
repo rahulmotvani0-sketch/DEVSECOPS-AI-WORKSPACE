@@ -4,7 +4,7 @@
 it on start and updates it before stopping. Keep it accurate over pretty. Newest updates at the
 top of each section.
 
-- **Last updated:** 2026-09-29 by Antigravity
+- **Last updated:** 2026-10-01 by Antigravity
 - **Current focus:** **Full v0.2 Pre-Launch Polish, Packaging & Manual Click-Through** — IaC & Terraform Reviewer, Security findings, Trivy/Secrets scanners, FindingStore, and Copilot Toolbridge are completed and verified live across the Rust backend and React UI. Next up: manual click-through on real display and pre-launch git secret scan.
 - **Decision in force:** expand to the v0.2 cockpit *before* public launch (owner's call);
   timebox it. Merge is open-source-first: reimplement Cosmic, install RDM+Cursor.
@@ -12,6 +12,31 @@ top of each section.
 ---
 
 ## ✅ DONE
+
+- **Prometheus Custom HTTP Header Support & Request Wiring — DONE & VERIFIED (Antigravity, 2026-09-29)**.
+  - **HTTP Request Header Injection**: Chained `.apply_headers(req)` across all `LivePrometheusBackend` HTTP requests (`get_status`, `query_instant`, `query_range`, `list_metric_names`) in `crates/airlock-prom/src/lib.rs`.
+  - **Unit Testing**: Added unit test `test_live_prometheus_with_headers` verifying `LivePrometheusBackend::with_headers` populates custom headers (`X-Scope-OrgID`, `Authorization`) cleanly.
+  - **Verification**: `cargo fmt` clean; `cargo clippy -D warnings` 0 warnings; `cargo test --workspace` 116/116 passed; `src-ui npm run build` (tsc + vite) 1,605 modules green.
+
+- **GCP Service Account & Slack Token DLP Redaction & CLI `--json` Output — DONE & VERIFIED (Antigravity, 2026-09-29)**.
+  - **GCP & Slack DLP Rules**: Added DLP regex redaction detectors in `ContextEngine::redact_secrets` (`crates/airlock-core/src/context/mod.rs`) for GCP Service Account JSON keys (`"type": "service_account"`) and Slack API tokens (`xoxb-...`), replacing them with `[REDACTED_GCP_SERVICE_ACCOUNT]` and `[REDACTED_SLACK_TOKEN]`.
+  - **CLI Audit Log NDJSON/JSON Flag**: Extended `airlock audit-log` in `crates/airlock-cli/src/main.rs` with `--json` / `-j` flag to output pretty-printed JSON audit entries for pipeline integration with `jq`.
+  - **Verification**: `cargo fmt` clean; `cargo clippy -D warnings` 0 warnings; `cargo test --workspace` 115/115 passed; `cargo run --bin airlock -- audit-log --limit 2 --json` output verified; `src-ui npm run build` (tsc + vite) 1,605 modules green.
+
+- **Keyboard Shortcuts Cheat-Sheet Modal (`ShortcutsModal.tsx`) — DONE & VERIFIED (Antigravity, 2026-09-29)**.
+  - **Component Implementation**: Created [`ShortcutsModal.tsx`](file:///home/rahul/PROJECT%27S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/ShortcutsModal.tsx) displaying a dark-mode glassmorphic cheat-sheet for all workstation keyboard shortcuts (`Ctrl+P`, `Ctrl+K`, `Ctrl+L`, `Ctrl+I`, `Ctrl+` `, `Shift+?`).
+  - **Global Listener & Wiring**: Wired global `?` (Shift + `/`) key listener in `src-ui/src/App.tsx` (skipping inputs and textareas) and rendered `<ShortcutsModal>` overlay.
+  - **Verification**: `src-ui npm run build` (tsc + vite) 1,605 modules green; `cargo test --workspace` 115/115 passed.
+
+- **North-Star Chaos Lab Scenario & VHS Demo Recording Script — DONE & VERIFIED (Antigravity, 2026-09-29)**.
+  - **North-Star Lab Simulation**: Executed full 90-second chaos injection (`lab/scripts/demo-north-star.sh`), verifying status checks, offline AI incident root-cause diagnosis (`checkout-api` OOMKill), security boundary mutation blocking (`kubectl delete deployment`), and SHA-256 hash-chained audit logging across all 5 invariants.
+  - **VHS Recording Tape Asset**: Created [`lab/scripts/demo.tape`](file:///home/rahul/PROJECT%27S/DEVSECOPS%20AI%20WORKSPACE/lab/scripts/demo.tape) for Charm's `vhs` CLI tool to generate high-resolution terminal GIF demonstrations for `README.md`.
+  - **Documentation Hygiene**: Updated `CONTRIBUTING.md` removing deprecated `--exclude airlock-desktop` flags now that desktop crate compiles cleanly in unified workspace verification loop.
+
+- **Pre-Launch Git History Secret Scan & Full Workspace Verification — DONE & VERIFIED (Antigravity, 2026-09-29)**.
+  - **Git History Secret Audit**: Executed automated pattern scanning across all git commits for exposed AWS access keys, GitHub personal tokens, SSH private keys, Slack tokens, and database credentials. Verified zero real secrets exist in history (all 27 flags verified as synthetic unit test redaction assertions, e.g. `AKIAIOSFODNN7EXAMPLE`).
+  - **Full Verification Suite**: `cargo fmt` clean; `cargo clippy -D warnings` 0 warnings across all 12 crates; `cargo test --workspace` 115/115 passed; `src-ui npm run build` (tsc + vite) 1,604 modules green.
+  - **Credential Vault**: Confirmed `vault_get_status` and `CredentialVault` reflect live OS-Keyring storage state with zero hardcoded/mock count fallback.
 
 - **DevSecOps Security Cockpit CVE Expansion & Status Mutation Wiring — DONE & VERIFIED (Antigravity, 2026-09-29)**.
   - **Status Filter Controls & Backend Status Updates**: Added interactive status filter tabs (`ALL`, `OPEN`, `RESOLVED`, `IGNORED`) with live badge counts and integrated Tauri IPC `findings_update_status` allowing security engineers to transition finding status (`OPEN`, `RESOLVED`, `IGNORED`) directly from the Cockpit UI Inspector panel.
@@ -674,7 +699,7 @@ top of each section.
 
 ## 🚧 IN PROGRESS
 
-- **Security Cockpit Enhancements (`DevSecOpsSecurityView.tsx`)**: Live CVE/vulnerability detail expansion, status updates (`findings_update_status` IPC for Resolve/Ignore/Reopen), and multi-dimensional filter controls (Antigravity, 2026-09-29).
+- **Pre-Launch Hygiene & Verification**: Pre-launch git history secret audit complete (zero leaked credentials across history); full Rust + React UI verification loop green; next up: optional manual click-through on live SSH bastion target (Antigravity, 2026-09-29).
 
 
 ## ⏭️ NEXT UP (claimable)

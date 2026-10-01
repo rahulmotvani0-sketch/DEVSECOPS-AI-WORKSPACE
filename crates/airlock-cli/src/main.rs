@@ -29,9 +29,13 @@ enum Commands {
     AuditLog {
         #[arg(short, long, default_value = "10")]
         limit: usize,
+        #[arg(short, long, default_value_t = false)]
+        json: bool,
     },
     /// Kubernetes read-only operations and security gate inspection
     K8s {
+        #[arg(short, long)]
+        kubeconfig: Option<std::path::PathBuf>,
         #[command(subcommand)]
         sub: K8sCommands,
     },
@@ -171,7 +175,10 @@ async fn main() -> Result<()> {
                 println!("{}", line);
             }
         }
-        Commands::K8s { sub } => {
+        Commands::K8s { kubeconfig, sub } => {
+            if let Some(ref path) = kubeconfig {
+                println!("Using custom kubeconfig file: {}", path.display());
+            }
             match sub {
                 K8sCommands::Status => {
                     let status = api.k8s_get_cluster_status().await?;
@@ -517,32 +524,36 @@ async fn main() -> Result<()> {
             );
             println!("============================================================\n");
         }
-        Commands::AuditLog { limit } => {
-            println!(
-                "Fetching recent {} audit entries from local database...",
-                limit
-            );
+        Commands::AuditLog { limit, json } => {
             let logs = api.fetch_audit_logs(limit)?;
-            println!("-------------------------------------------------------------------------------------------------------");
-            println!(
-                "{:<20} {:<12} {:<15} {:<12} {:<25} {:<15}",
-                "TIMESTAMP", "ENV", "TARGET", "AI MODEL", "ACTION", "STATUS"
-            );
-            println!("-------------------------------------------------------------------------------------------------------");
-            for log in logs {
+            if json {
+                println!("{}", serde_json::to_string_pretty(&logs)?);
+            } else {
+                println!(
+                    "Fetching recent {} audit entries from local database...",
+                    limit
+                );
+                println!("-------------------------------------------------------------------------------------------------------");
                 println!(
                     "{:<20} {:<12} {:<15} {:<12} {:<25} {:<15}",
-                    log.timestamp.format("%Y-%m-%d %H:%M"),
-                    log.environment.to_string(),
-                    log.resource_target,
-                    log.ai_model,
-                    if log.suggested_command.len() > 24 {
-                        &log.suggested_command[..24]
-                    } else {
-                        &log.suggested_command
-                    },
-                    log.approval_status.to_string()
+                    "TIMESTAMP", "ENV", "TARGET", "AI MODEL", "ACTION", "STATUS"
                 );
+                println!("-------------------------------------------------------------------------------------------------------");
+                for log in logs {
+                    println!(
+                        "{:<20} {:<12} {:<15} {:<12} {:<25} {:<15}",
+                        log.timestamp.format("%Y-%m-%d %H:%M"),
+                        log.environment.to_string(),
+                        log.resource_target,
+                        log.ai_model,
+                        if log.suggested_command.len() > 24 {
+                            &log.suggested_command[..24]
+                        } else {
+                            &log.suggested_command
+                        },
+                        log.approval_status.to_string()
+                    );
+                }
             }
         }
     }

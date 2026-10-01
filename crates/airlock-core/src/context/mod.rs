@@ -201,6 +201,25 @@ impl ContextEngine {
             redacted = true;
         }
 
+        // GCP Service Account JSON Key regex
+        let gcp_sa_re = regex::Regex::new(r#"(?i)("type"\s*:\s*"service_account"|"[a-z0-9_]*private_key_id"\s*:\s*"[a-f0-9]{40}")"#).unwrap();
+        if gcp_sa_re.is_match(&text) {
+            text = gcp_sa_re
+                .replace_all(&text, "[REDACTED_GCP_SERVICE_ACCOUNT]")
+                .to_string();
+            redacted = true;
+        }
+
+        // Slack API Token regex (xoxb, xoxp, xoxr, xoxa, xoxs)
+        let slack_re =
+            regex::Regex::new(r"xox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24}").unwrap();
+        if slack_re.is_match(&text) {
+            text = slack_re
+                .replace_all(&text, "[REDACTED_SLACK_TOKEN]")
+                .to_string();
+            redacted = true;
+        }
+
         (text, redacted)
     }
 

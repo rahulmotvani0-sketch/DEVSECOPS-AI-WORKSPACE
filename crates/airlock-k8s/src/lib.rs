@@ -475,6 +475,41 @@ impl LiveK8sBackend {
         }
     }
 
+    pub async fn from_kubeconfig_path(path: impl AsRef<std::path::Path>) -> Self {
+        let timeout_duration = Duration::from_secs(5);
+        let path_ref = path.as_ref();
+        let client = match kube::config::Kubeconfig::read_from(path_ref) {
+            Ok(config) => match kube::config::Config::from_custom_kubeconfig(
+                config,
+                &kube::config::KubeConfigOptions::default(),
+            )
+            .await
+            {
+                Ok(options) => kube::Client::try_from(options).ok(),
+                Err(e) => {
+                    tracing::warn!(
+                        "Failed to load config options from kubeconfig file {}: {}",
+                        path_ref.display(),
+                        e
+                    );
+                    None
+                }
+            },
+            Err(e) => {
+                tracing::warn!(
+                    "Failed to read custom kubeconfig from {}: {}",
+                    path_ref.display(),
+                    e
+                );
+                None
+            }
+        };
+        Self {
+            client,
+            timeout_duration,
+        }
+    }
+
     pub fn new_with_client(client: kube::Client) -> Self {
         Self {
             client: Some(client),
