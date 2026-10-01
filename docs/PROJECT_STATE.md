@@ -13,10 +13,11 @@ top of each section.
 
 ## ✅ DONE
 
-- **Panel Synchronous Drag Resizing Fix — DONE & VERIFIED (Antigravity, 2026-10-01)**.
-  - **Eliminated Dropped Frame Updates**: Fixed the issue where `requestAnimationFrame` checked `isDraggingRef.current` inside the frame callback after `handleMouseUp` had already set `isDraggingRef = false`, causing final drag positions to be dropped.
-  - **Synchronous State Updates & Mousedown Sync**: Updated `handleMouseMove` to update state (`setAssetTreeWidth`, `setCopilotWidth`, `setLeftWidth`) synchronously while mouse is dragged, and synchronized `currentWidthRef.current` on `onMouseDown` for instant, 100% reliable resizer panel dragging.
-  - **Git Commit & Remote Sync (`f531f18`)**: Pushed commit `f531f18` cleanly to GitHub remote (`https://github.com/rahulmotvani0-sketch/DEVSECOPS-AI-WORKSPACE.git`).
+- **Panel Maximize/Minimize Controls & Hover/Double-Click Resizing — DONE & VERIFIED (Antigravity, 2026-10-01)**.
+  - **1-Click Panel Maximize/Minimize**: Added explicit Maximize/Minimize toggle buttons (`Maximize2` / `Minimize2` icons) to panel headers in [`DevSecOpsSecurityView.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/DevSecOpsSecurityView.tsx) and [`InfrastructureIaCView.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/InfrastructureIaCView.tsx), allowing 1-click full-screen expansion of Findings List, IaC List, or Deep Inspectors.
+  - **Double-Click Resizer Width Toggles & Cyan Hover Cues**: Enhanced resizer bars in `App.tsx`, `DevSecOpsSecurityView.tsx`, and `InfrastructureIaCView.tsx` with double-click auto-toggle (`onDoubleClick`), `#06b6d4` cyan glow borders on hover, col-resize cursors, and informative tooltips.
+  - **Browser & Tauri Window Control Fallbacks**: Wired window minimize, maximize (`document.documentElement.requestFullscreen()`), and close handlers in [`DevSecOpsHeader.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/DevSecOpsHeader.tsx) and [`Header.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/Header.tsx) to function 100% reliably in both Tauri desktop mode and web browser preview mode.
+  - **Git Commit & Remote Sync (`f2b1e7b`)**: Pushed commit `f2b1e7b` cleanly to GitHub remote (`https://github.com/rahulmotvani0-sketch/DEVSECOPS-AI-WORKSPACE.git`).
   - **Full Verification**: `cargo fmt` clean; `cargo clippy -D warnings` 0 warnings; `cargo test --workspace` 116/116 passed; `src-ui npm run build` 1,606 modules transformed green.
 
 - **Inner Split-View Interactive Resizer Drag Handles — DONE & VERIFIED (Antigravity, 2026-10-01)**.
