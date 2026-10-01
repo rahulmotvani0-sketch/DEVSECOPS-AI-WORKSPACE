@@ -97,6 +97,38 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanMessage, setScanMessage] = useState<string | null>(null);
 
+  // Resizable Split Pane State
+  const [leftWidth, setLeftWidth] = useState<number>(() => {
+    const saved = localStorage.getItem('airlock.layout.securityLeftWidth');
+    return saved ? parseInt(saved, 10) : 520;
+  });
+  const isDraggingRef = React.useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingRef.current) {
+        const newWidth = Math.max(260, Math.min(950, e.clientX - 280));
+        setLeftWidth(newWidth);
+        localStorage.setItem('airlock.layout.securityLeftWidth', newWidth.toString());
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
   // Remediation Human Gate Drawer State
   const [activeProposal, setActiveProposal] = useState<ToolProposal | null>(null);
   const [approvalToken, setApprovalToken] = useState<string>('EXPLICIT_HUMAN_APPROVED_V1');
@@ -719,7 +751,8 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
         {/* Left Side: Findings List */}
         <div
           style={{
-            flex: 1.3,
+            width: leftWidth,
+            flexShrink: 0,
             borderRight: '1px solid #1a2234',
             display: 'flex',
             flexDirection: 'column',
@@ -869,10 +902,40 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
           )}
         </div>
 
+        {/* Drag Resizer Handle */}
+        <div
+          onMouseDown={(e) => {
+            e.preventDefault();
+            isDraggingRef.current = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+          }}
+          style={{
+            width: '6px',
+            cursor: 'col-resize',
+            backgroundColor: '#161e2e',
+            borderLeft: '1px solid #1e293b',
+            borderRight: '1px solid #1e293b',
+            transition: 'background-color 0.15s ease',
+            zIndex: 15,
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
+          onMouseLeave={(e) => {
+            if (!isDraggingRef.current) e.currentTarget.style.backgroundColor = '#161e2e';
+          }}
+          title="Drag left/right to resize Findings List width"
+        >
+          <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
+        </div>
+
         {/* Right Side: Selected Finding Details & Remediation Drawer */}
         <div
           style={{
-            flex: 1.5,
+            flex: 1,
             padding: '20px',
             overflowY: 'auto',
             display: 'flex',

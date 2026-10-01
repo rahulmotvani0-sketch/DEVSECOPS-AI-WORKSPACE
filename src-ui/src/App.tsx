@@ -469,19 +469,26 @@ export const App: React.FC = () => {
                 document.body.style.userSelect = 'none';
               }}
               style={{
-                width: '4px',
+                width: '6px',
                 cursor: 'col-resize',
-                backgroundColor: 'transparent',
+                backgroundColor: '#161e2e',
+                borderLeft: '1px solid #1e293b',
+                borderRight: '1px solid #1e293b',
                 transition: 'background-color 0.15s ease',
                 zIndex: 25,
                 flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
               onMouseLeave={(e) => {
-                if (!isDraggingLeftRef.current) e.currentTarget.style.backgroundColor = 'transparent';
+                if (!isDraggingLeftRef.current) e.currentTarget.style.backgroundColor = '#161e2e';
               }}
-              title="Drag to resize Asset Tree sidebar"
-            />
+              title="Drag left/right to resize Asset Tree sidebar"
+            >
+              <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
+            </div>
           </>
         )}
 
@@ -614,19 +621,26 @@ export const App: React.FC = () => {
               document.body.style.userSelect = 'none';
             }}
             style={{
-              width: '4px',
+              width: '6px',
               cursor: 'col-resize',
-              backgroundColor: 'transparent',
+              backgroundColor: '#161e2e',
+              borderLeft: '1px solid #1e293b',
+              borderRight: '1px solid #1e293b',
               transition: 'background-color 0.15s ease',
               zIndex: 25,
               flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
             onMouseLeave={(e) => {
-              if (!isDraggingRightRef.current) e.currentTarget.style.backgroundColor = 'transparent';
+              if (!isDraggingRightRef.current) e.currentTarget.style.backgroundColor = '#161e2e';
             }}
-            title="Drag to resize Copilot panel"
-          />
+            title="Drag left/right to resize Copilot panel"
+          >
+            <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
+          </div>
         )}
 
         {/* Right AIRLOCK COPILOT Panel (Cosmic: always present) */}

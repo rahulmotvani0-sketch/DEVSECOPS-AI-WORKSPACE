@@ -99,6 +99,38 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const [scanMessage, setScanMessage] = useState<string | null>(null);
 
+  // Resizable Split Pane State
+  const [leftWidth, setLeftWidth] = useState<number>(() => {
+    const saved = localStorage.getItem('airlock.layout.iacLeftWidth');
+    return saved ? parseInt(saved, 10) : 420;
+  });
+  const isDraggingRef = React.useRef(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDraggingRef.current) {
+        const newWidth = Math.max(260, Math.min(850, e.clientX - 280));
+        setLeftWidth(newWidth);
+        localStorage.setItem('airlock.layout.iacLeftWidth', newWidth.toString());
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isDraggingRef.current) {
+        isDraggingRef.current = false;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
   // Human-gated remediation state
   const [activeProposal, setActiveProposal] = useState<ToolProposal | null>(null);
   const [approvalTokenInput, setApprovalTokenInput] = useState<string>('EXPLICIT_HUMAN_APPROVED_V1');
@@ -480,15 +512,14 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
         {/* Left List */}
         <div
           style={{
-            maxWidth: '380px',
-            width: '100%',
-            flex: 1,
-            minWidth: 0,
+            width: leftWidth,
+            flexShrink: 0,
             borderRight: '1px solid #1a2234',
             display: 'flex',
             flexDirection: 'column',
             backgroundColor: '#0c111c',
             overflowY: 'auto',
+            minWidth: 0,
           }}
         >
           <div
@@ -585,6 +616,36 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
               );
             })}
           </div>
+        </div>
+
+        {/* Drag Resizer Handle */}
+        <div
+          onMouseDown={(e) => {
+            e.preventDefault();
+            isDraggingRef.current = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+          }}
+          style={{
+            width: '6px',
+            cursor: 'col-resize',
+            backgroundColor: '#161e2e',
+            borderLeft: '1px solid #1e293b',
+            borderRight: '1px solid #1e293b',
+            transition: 'background-color 0.15s ease',
+            zIndex: 15,
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
+          onMouseLeave={(e) => {
+            if (!isDraggingRef.current) e.currentTarget.style.backgroundColor = '#161e2e';
+          }}
+          title="Drag left/right to resize IaC list width"
+        >
+          <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
         </div>
 
         {/* Right Detail: Risk & Diff */}
