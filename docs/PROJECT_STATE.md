@@ -13,6 +13,13 @@ top of each section.
 
 ## ✅ DONE
 
+- **Inner Split-View Interactive Resizer Drag Handles — DONE & VERIFIED (Antigravity, 2026-10-01)**.
+  - **Inner Panel Drag Resizing**: Implemented interactive mouse drag resizers with visible `#161e2e` border handles, cyan `#06b6d4` hover highlights, and vertical grip indicators in [`DevSecOpsSecurityView.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/DevSecOpsSecurityView.tsx) (between Findings List & Inspector Details) and [`InfrastructureIaCView.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/InfrastructureIaCView.tsx) (between IaC List & Risk Diff Inspector).
+  - **Outer Workspace Drag Handles**: Upgraded outer resizer handles in [`App.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/App.tsx) (between Asset Tree & Workspace, and Workspace & Copilot Panel) with clear 6px grab areas and grip indicators.
+  - **LocalStorage Persistence**: Widths persist in `localStorage` under `airlock.layout.securityLeftWidth` and `airlock.layout.iacLeftWidth`.
+  - **Git Commit & Remote Sync (`c71dca4`)**: Pushed commit `c71dca4` cleanly to GitHub remote (`https://github.com/rahulmotvani0-sketch/DEVSECOPS-AI-WORKSPACE.git`).
+  - **Full Verification**: `cargo fmt` clean; `cargo clippy -D warnings` 0 warnings; `cargo test --workspace` 116/116 passed; `src-ui npm run build` 1,606 modules transformed green.
+
 - **Universal Resolution Adaptation & Responsive Container Fitting — DONE & VERIFIED (Antigravity, 2026-10-01)**.
   - **Fluid Layout & Breakpoint System**: Added `.responsive-split-container`, `.responsive-grid-cards`, `.responsive-toolbar`, and `.flex-shrink-fit` CSS classes in [`index.css`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/index.css), enabling split-panel views (`DevSecOpsSecurityView.tsx`, `InfrastructureIaCView.tsx`, `CentralWorkspace.tsx`) to stack vertically and adapt smoothly on screens from 768px/1024px laptops up to 4K ultra-wide monitors without horizontal cut-off.
   - **Flexbox Min-Width Guards**: Added `minWidth: 0` guards to flex parent and child containers across views, preventing code snippets, table rows, or long asset strings from causing container overflow.
