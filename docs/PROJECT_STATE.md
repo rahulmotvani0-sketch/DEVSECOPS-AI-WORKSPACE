@@ -13,6 +13,12 @@ top of each section.
 
 ## ✅ DONE
 
+- **Drag Resizer 60FPS Stabilization & Relative Offset Alignment — DONE & VERIFIED (Antigravity, 2026-10-01)**.
+  - **Eliminated Drag Jitter & Instability**: Fixed mouse coordinate offset mismatch by utilizing `containerRef.current.getBoundingClientRect()` relative offset calculations (`e.clientX - rect.left`) in [`DevSecOpsSecurityView.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/DevSecOpsSecurityView.tsx), [`InfrastructureIaCView.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/InfrastructureIaCView.tsx), and [`App.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/App.tsx).
+  - **60FPS Smooth Throttling & Deferred Storage**: Integrated `requestAnimationFrame` to batch UI state updates to the display refresh rate, deferring `localStorage.setItem` calls exclusively to `handleMouseUp` (drag end) to eliminate I/O main-thread micro-stutters.
+  - **Git Commit & Remote Sync (`9ace14b`)**: Pushed commit `9ace14b` cleanly to GitHub remote (`https://github.com/rahulmotvani0-sketch/DEVSECOPS-AI-WORKSPACE.git`).
+  - **Full Verification**: `cargo fmt` clean; `cargo clippy -D warnings` 0 warnings; `cargo test --workspace` 116/116 passed; `src-ui npm run build` 1,606 modules transformed green.
+
 - **Inner Split-View Interactive Resizer Drag Handles — DONE & VERIFIED (Antigravity, 2026-10-01)**.
   - **Inner Panel Drag Resizing**: Implemented interactive mouse drag resizers with visible `#161e2e` border handles, cyan `#06b6d4` hover highlights, and vertical grip indicators in [`DevSecOpsSecurityView.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/DevSecOpsSecurityView.tsx) (between Findings List & Inspector Details) and [`InfrastructureIaCView.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/components/InfrastructureIaCView.tsx) (between IaC List & Risk Diff Inspector).
   - **Outer Workspace Drag Handles**: Upgraded outer resizer handles in [`App.tsx`](file:///home/rahul/PROJECT'S/DEVSECOPS%20AI%20WORKSPACE/src-ui/src/App.tsx) (between Asset Tree & Workspace, and Workspace & Copilot Panel) with clear 6px grab areas and grip indicators.
