@@ -198,7 +198,6 @@ export const App: React.FC = () => {
 
   const isDraggingLeftRef = React.useRef(false);
   const isDraggingRightRef = React.useRef(false);
-  const appAnimationFrameRef = React.useRef<number | null>(null);
   const currentLeftWidthRef = React.useRef(assetTreeWidth);
   const currentRightWidthRef = React.useRef(copilotWidth);
 
@@ -209,20 +208,11 @@ export const App: React.FC = () => {
       if (isDraggingLeftRef.current) {
         const newWidth = Math.max(140, Math.min(500, e.clientX - 48));
         currentLeftWidthRef.current = newWidth;
+        setAssetTreeWidth(newWidth);
       } else if (isDraggingRightRef.current) {
         const newWidth = Math.max(240, Math.min(700, window.innerWidth - e.clientX));
         currentRightWidthRef.current = newWidth;
-      }
-
-      if (appAnimationFrameRef.current === null) {
-        appAnimationFrameRef.current = requestAnimationFrame(() => {
-          if (isDraggingLeftRef.current) {
-            setAssetTreeWidth(currentLeftWidthRef.current);
-          } else if (isDraggingRightRef.current) {
-            setCopilotWidth(currentRightWidthRef.current);
-          }
-          appAnimationFrameRef.current = null;
-        });
+        setCopilotWidth(newWidth);
       }
     };
 
@@ -246,9 +236,6 @@ export const App: React.FC = () => {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
-      if (appAnimationFrameRef.current !== null) {
-        cancelAnimationFrame(appAnimationFrameRef.current);
-      }
     };
   }, []);
 
@@ -488,6 +475,7 @@ export const App: React.FC = () => {
               onMouseDown={(e) => {
                 e.preventDefault();
                 isDraggingLeftRef.current = true;
+                currentLeftWidthRef.current = assetTreeWidth;
                 document.body.style.cursor = 'col-resize';
                 document.body.style.userSelect = 'none';
               }}
@@ -640,6 +628,7 @@ export const App: React.FC = () => {
             onMouseDown={(e) => {
               e.preventDefault();
               isDraggingRightRef.current = true;
+              currentRightWidthRef.current = copilotWidth;
               document.body.style.cursor = 'col-resize';
               document.body.style.userSelect = 'none';
             }}

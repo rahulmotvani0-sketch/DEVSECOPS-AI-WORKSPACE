@@ -106,7 +106,6 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
   });
   const containerRef = React.useRef<HTMLDivElement>(null);
   const isDraggingRef = React.useRef(false);
-  const animationFrameRef = React.useRef<number | null>(null);
   const currentWidthRef = React.useRef(leftWidth);
 
   useEffect(() => {
@@ -117,13 +116,7 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
       const relativeX = e.clientX - rect.left;
       const clampedWidth = Math.max(260, Math.min(rect.width - 240, relativeX));
       currentWidthRef.current = clampedWidth;
-
-      if (animationFrameRef.current === null) {
-        animationFrameRef.current = requestAnimationFrame(() => {
-          setLeftWidth(currentWidthRef.current);
-          animationFrameRef.current = null;
-        });
-      }
+      setLeftWidth(clampedWidth);
     };
 
     const handleMouseUp = () => {
@@ -140,9 +133,6 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
     };
   }, []);
 
@@ -638,6 +628,7 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
           onMouseDown={(e) => {
             e.preventDefault();
             isDraggingRef.current = true;
+            currentWidthRef.current = leftWidth;
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
           }}
