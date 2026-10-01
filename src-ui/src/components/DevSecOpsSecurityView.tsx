@@ -16,6 +16,8 @@ import {
   AlertTriangle,
   EyeOff,
   RotateCcw,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { Finding, ToolProposal, ToolResult, DiscoveryRun } from '../types';
@@ -102,6 +104,8 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
     const saved = localStorage.getItem('airlock.layout.securityLeftWidth');
     return saved ? parseInt(saved, 10) : 520;
   });
+  const [isDetailMaximized, setIsDetailMaximized] = useState<boolean>(false);
+  const [isListMaximized, setIsListMaximized] = useState<boolean>(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const isDraggingRef = React.useRef(false);
   const currentWidthRef = React.useRef(leftWidth);
@@ -754,18 +758,55 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
       {/* Main Content Split View */}
       <div ref={containerRef} className="responsive-split-container" style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
         {/* Left Side: Findings List */}
-        <div
-          style={{
-            width: leftWidth,
-            flexShrink: 0,
-            borderRight: '1px solid #1a2234',
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: '#0a0d14',
-            overflowY: 'auto',
-            minWidth: 0,
-          }}
-        >
+        {!isDetailMaximized && (
+          <div
+            style={{
+              width: isListMaximized ? '100%' : leftWidth,
+              flexShrink: 0,
+              borderRight: '1px solid #1a2234',
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: '#0a0d14',
+              overflowY: 'auto',
+              minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '6px 12px',
+                backgroundColor: '#0c101a',
+                borderBottom: '1px solid #1a2234',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#94a3b8',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <ShieldAlert size={13} color="#06b6d4" />
+                <span>FINDINGS & ASSETS ({filteredFindings.length})</span>
+              </div>
+              <button
+                onClick={() => setIsListMaximized((prev) => !prev)}
+                title={isListMaximized ? "Restore split view" : "Maximize Findings List"}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#64748b',
+                  cursor: 'pointer',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#38bdf8')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+              >
+                {isListMaximized ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+              </button>
+            </div>
           <div
             style={{
               display: 'grid',
@@ -906,51 +947,91 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
             })
           )}
         </div>
+        )}
 
         {/* Drag Resizer Handle */}
-        <div
-          onMouseDown={(e) => {
-            e.preventDefault();
-            isDraggingRef.current = true;
-            currentWidthRef.current = leftWidth;
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-          }}
-          style={{
-            width: '6px',
-            cursor: 'col-resize',
-            backgroundColor: '#161e2e',
-            borderLeft: '1px solid #1e293b',
-            borderRight: '1px solid #1e293b',
-            transition: 'background-color 0.15s ease',
-            zIndex: 15,
-            flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
-          onMouseLeave={(e) => {
-            if (!isDraggingRef.current) e.currentTarget.style.backgroundColor = '#161e2e';
-          }}
-          title="Drag left/right to resize Findings List width"
-        >
-          <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
-        </div>
+        {!isDetailMaximized && !isListMaximized && (
+          <div
+            onMouseDown={(e) => {
+              e.preventDefault();
+              isDraggingRef.current = true;
+              currentWidthRef.current = leftWidth;
+              document.body.style.cursor = 'col-resize';
+              document.body.style.userSelect = 'none';
+            }}
+            onDoubleClick={() => {
+              const nextWidth = leftWidth > 600 ? 320 : leftWidth < 400 ? 520 : 700;
+              setLeftWidth(nextWidth);
+              currentWidthRef.current = nextWidth;
+              localStorage.setItem('airlock.layout.securityLeftWidth', nextWidth.toString());
+            }}
+            style={{
+              width: '6px',
+              cursor: 'col-resize',
+              backgroundColor: '#161e2e',
+              borderLeft: '1px solid #1e293b',
+              borderRight: '1px solid #1e293b',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              zIndex: 15,
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#06b6d4';
+              e.currentTarget.style.borderColor = '#06b6d4';
+            }}
+            onMouseLeave={(e) => {
+              if (!isDraggingRef.current) {
+                e.currentTarget.style.backgroundColor = '#161e2e';
+                e.currentTarget.style.borderColor = '#1e293b';
+              }
+            }}
+            title="Drag left/right to resize Findings List | Double-click to toggle width"
+          >
+            <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
+          </div>
+        )}
 
         {/* Right Side: Selected Finding Details & Remediation Drawer */}
-        <div
-          style={{
-            flex: 1,
-            padding: '20px',
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            backgroundColor: '#0c101a',
-            minWidth: 0,
-          }}
-        >
+        {!isListMaximized && (
+          <div
+            style={{
+              flex: 1,
+              padding: '20px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              backgroundColor: '#0c101a',
+              minWidth: 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '-8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>FINDING & REMEDIATION DEEP INSPECTOR</span>
+              <button
+                onClick={() => setIsDetailMaximized((prev) => !prev)}
+                title={isDetailMaximized ? "Restore split view" : "Maximize Findings Detail Inspector"}
+                style={{
+                  background: '#161e2e',
+                  border: '1px solid #1e293b',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#06b6d4')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1e293b')}
+              >
+                {isDetailMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                <span>{isDetailMaximized ? "Restore View" : "Maximize Inspector"}</span>
+              </button>
+            </div>
           {/* Finding Header Card */}
           <div
             style={{
@@ -1540,7 +1621,8 @@ export const DevSecOpsSecurityView: React.FC<DevSecOpsSecurityViewProps> = ({ on
             )}
           </div>
         </div>
-      </div>
+      )}
     </div>
+  </div>
   );
 };

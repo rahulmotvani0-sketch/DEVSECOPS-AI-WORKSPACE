@@ -479,24 +479,36 @@ export const App: React.FC = () => {
                 document.body.style.cursor = 'col-resize';
                 document.body.style.userSelect = 'none';
               }}
+              onDoubleClick={() => {
+                const nextWidth = assetTreeWidth > 300 ? 236 : 380;
+                setAssetTreeWidth(nextWidth);
+                currentLeftWidthRef.current = nextWidth;
+                localStorage.setItem('airlock.layout.assetTreeWidth', nextWidth.toString());
+              }}
               style={{
                 width: '6px',
                 cursor: 'col-resize',
                 backgroundColor: '#161e2e',
                 borderLeft: '1px solid #1e293b',
                 borderRight: '1px solid #1e293b',
-                transition: 'background-color 0.15s ease',
+                transition: 'background-color 0.15s ease, border-color 0.15s ease',
                 zIndex: 25,
                 flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
-              onMouseLeave={(e) => {
-                if (!isDraggingLeftRef.current) e.currentTarget.style.backgroundColor = '#161e2e';
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#06b6d4';
+                e.currentTarget.style.borderColor = '#06b6d4';
               }}
-              title="Drag left/right to resize Asset Tree sidebar"
+              onMouseLeave={(e) => {
+                if (!isDraggingLeftRef.current) {
+                  e.currentTarget.style.backgroundColor = '#161e2e';
+                  e.currentTarget.style.borderColor = '#1e293b';
+                }
+              }}
+              title="Drag left/right to resize Asset Tree | Double-click to toggle width"
             >
               <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
             </div>
@@ -632,24 +644,36 @@ export const App: React.FC = () => {
               document.body.style.cursor = 'col-resize';
               document.body.style.userSelect = 'none';
             }}
+            onDoubleClick={() => {
+              const nextWidth = copilotWidth > 450 ? 380 : 560;
+              setCopilotWidth(nextWidth);
+              currentRightWidthRef.current = nextWidth;
+              localStorage.setItem('airlock.layout.copilotWidth', nextWidth.toString());
+            }}
             style={{
               width: '6px',
               cursor: 'col-resize',
               backgroundColor: '#161e2e',
               borderLeft: '1px solid #1e293b',
               borderRight: '1px solid #1e293b',
-              transition: 'background-color 0.15s ease',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
               zIndex: 25,
               flexShrink: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
-            onMouseLeave={(e) => {
-              if (!isDraggingRightRef.current) e.currentTarget.style.backgroundColor = '#161e2e';
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#06b6d4';
+              e.currentTarget.style.borderColor = '#06b6d4';
             }}
-            title="Drag left/right to resize Copilot panel"
+            onMouseLeave={(e) => {
+              if (!isDraggingRightRef.current) {
+                e.currentTarget.style.backgroundColor = '#161e2e';
+                e.currentTarget.style.borderColor = '#1e293b';
+              }
+            }}
+            title="Drag left/right to resize Copilot panel | Double-click to toggle width"
           >
             <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
           </div>

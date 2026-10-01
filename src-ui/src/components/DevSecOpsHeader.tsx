@@ -43,7 +43,11 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
     try {
       await invoke('window_minimize');
     } catch {
-      // Browser fallback
+      if (document.documentElement.classList.contains('compact-mode')) {
+        document.documentElement.classList.remove('compact-mode');
+      } else {
+        document.documentElement.classList.add('compact-mode');
+      }
     }
   };
 
@@ -51,7 +55,13 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
     try {
       await invoke('window_toggle_maximize');
     } catch {
-      // Browser fallback
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
     }
   };
 
@@ -60,7 +70,7 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
     try {
       await invoke('window_start_dragging');
     } catch {
-      // Browser fallback
+      // Browser preview drag fallback
     }
   };
 
@@ -68,7 +78,9 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
     try {
       await invoke('window_close');
     } catch {
-      // Browser fallback
+      if (window.confirm('Close Airlock Cockpit session?')) {
+        window.close();
+      }
     }
   };
 

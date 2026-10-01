@@ -10,6 +10,8 @@ import {
   Play,
   Lock,
   X,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { Finding, DiscoveryRun, ToolResult, ToolProposal, IaCFinding } from '../types';
@@ -104,6 +106,8 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
     const saved = localStorage.getItem('airlock.layout.iacLeftWidth');
     return saved ? parseInt(saved, 10) : 420;
   });
+  const [isInspectorMaximized, setIsInspectorMaximized] = useState<boolean>(false);
+  const [isListMaximized, setIsListMaximized] = useState<boolean>(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const isDraggingRef = React.useRef(false);
   const currentWidthRef = React.useRef(leftWidth);
@@ -515,36 +519,57 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
       {/* Split Grid */}
       <div ref={containerRef} className="responsive-split-container" style={{ flex: 1, display: 'flex', overflow: 'hidden', minWidth: 0 }}>
         {/* Left List */}
-        <div
-          style={{
-            width: leftWidth,
-            flexShrink: 0,
-            borderRight: '1px solid #1a2234',
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: '#0c111c',
-            overflowY: 'auto',
-            minWidth: 0,
-          }}
-        >
+        {!isInspectorMaximized && (
           <div
             style={{
-              padding: '12px 16px',
-              backgroundColor: '#090d16',
-              borderBottom: '1px solid #1a2234',
+              width: isListMaximized ? '100%' : leftWidth,
+              flexShrink: 0,
+              borderRight: '1px solid #1a2234',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '10px',
-              fontWeight: 700,
-              color: '#64748b',
-              letterSpacing: '1px',
-              textTransform: 'uppercase',
+              flexDirection: 'column',
+              backgroundColor: '#0c111c',
+              overflowY: 'auto',
+              minWidth: 0,
             }}
           >
-            <span>DETECTED MISCONFIGURATIONS ({iacFindings.length})</span>
-            <span>SEVERITY</span>
-          </div>
+            <div
+              style={{
+                padding: '10px 16px',
+                backgroundColor: '#090d16',
+                borderBottom: '1px solid #1a2234',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '10px',
+                fontWeight: 700,
+                color: '#64748b',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+              }}
+            >
+              <span>DETECTED MISCONFIGURATIONS ({iacFindings.length})</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>SEVERITY</span>
+                <button
+                  onClick={() => setIsListMaximized((prev) => !prev)}
+                  title={isListMaximized ? "Restore split view" : "Maximize IaC List"}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    padding: '2px 4px',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#38bdf8')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#64748b')}
+                >
+                  {isListMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                </button>
+              </div>
+            </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {iacFindings.map((f) => {
@@ -622,51 +647,91 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
             })}
           </div>
         </div>
+        )}
 
         {/* Drag Resizer Handle */}
-        <div
-          onMouseDown={(e) => {
-            e.preventDefault();
-            isDraggingRef.current = true;
-            currentWidthRef.current = leftWidth;
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none';
-          }}
-          style={{
-            width: '6px',
-            cursor: 'col-resize',
-            backgroundColor: '#161e2e',
-            borderLeft: '1px solid #1e293b',
-            borderRight: '1px solid #1e293b',
-            transition: 'background-color 0.15s ease',
-            zIndex: 15,
-            flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#06b6d4')}
-          onMouseLeave={(e) => {
-            if (!isDraggingRef.current) e.currentTarget.style.backgroundColor = '#161e2e';
-          }}
-          title="Drag left/right to resize IaC list width"
-        >
-          <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
-        </div>
+        {!isInspectorMaximized && !isListMaximized && (
+          <div
+            onMouseDown={(e) => {
+              e.preventDefault();
+              isDraggingRef.current = true;
+              currentWidthRef.current = leftWidth;
+              document.body.style.cursor = 'col-resize';
+              document.body.style.userSelect = 'none';
+            }}
+            onDoubleClick={() => {
+              const nextWidth = leftWidth > 550 ? 280 : leftWidth < 350 ? 420 : 650;
+              setLeftWidth(nextWidth);
+              currentWidthRef.current = nextWidth;
+              localStorage.setItem('airlock.layout.iacLeftWidth', nextWidth.toString());
+            }}
+            style={{
+              width: '6px',
+              cursor: 'col-resize',
+              backgroundColor: '#161e2e',
+              borderLeft: '1px solid #1e293b',
+              borderRight: '1px solid #1e293b',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              zIndex: 15,
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#06b6d4';
+              e.currentTarget.style.borderColor = '#06b6d4';
+            }}
+            onMouseLeave={(e) => {
+              if (!isDraggingRef.current) {
+                e.currentTarget.style.backgroundColor = '#161e2e';
+                e.currentTarget.style.borderColor = '#1e293b';
+              }
+            }}
+            title="Drag left/right to resize IaC list width | Double-click to toggle width"
+          >
+            <div style={{ width: '2px', height: '16px', borderRadius: '1px', backgroundColor: '#475569' }} />
+          </div>
+        )}
 
         {/* Right Detail: Risk & Diff */}
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: '#0a0d14',
-            overflowY: 'auto',
-            padding: '24px',
-            gap: '20px',
-            minWidth: 0,
-          }}
-        >
+        {!isListMaximized && (
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: '#0a0d14',
+              overflowY: 'auto',
+              padding: '24px',
+              gap: '20px',
+              minWidth: 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '-8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b' }}>IAC RISK DIFF & PATCH INSPECTOR</span>
+              <button
+                onClick={() => setIsInspectorMaximized((prev) => !prev)}
+                title={isInspectorMaximized ? "Restore split view" : "Maximize IaC Patch Inspector"}
+                style={{
+                  background: '#161e2e',
+                  border: '1px solid #1e293b',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#06b6d4')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1e293b')}
+              >
+                {isInspectorMaximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+                <span>{isInspectorMaximized ? "Restore View" : "Maximize Inspector"}</span>
+              </button>
+            </div>
           <div
             style={{
               border: '1px solid #1e293b',
@@ -889,6 +954,7 @@ export const InfrastructureIaCView: React.FC<InfrastructureIaCViewProps> = ({ on
             </div>
           </div>
         </div>
+      )}
       </div>
 
       {/* Human-Gated Remediation Drawer */}
