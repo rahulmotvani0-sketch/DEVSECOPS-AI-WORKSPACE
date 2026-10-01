@@ -52,6 +52,15 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
     }
   };
 
+  const handleStartDragging = async (e: React.MouseEvent) => {
+    if (e.buttons !== 1) return;
+    try {
+      await invoke('window_start_dragging');
+    } catch {
+      // Browser fallback
+    }
+  };
+
   const handleClose = async () => {
     try {
       await invoke('window_close');
@@ -63,6 +72,7 @@ export const DevSecOpsHeader: React.FC<DevSecOpsHeaderProps> = ({
   return (
     <header
       data-tauri-drag-region
+      onMouseDown={handleStartDragging}
       onDoubleClick={handleMaximize}
       style={{
         height: '42px',

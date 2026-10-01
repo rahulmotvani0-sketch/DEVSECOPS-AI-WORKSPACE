@@ -60,6 +60,15 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const handleStartDragging = async (e: React.MouseEvent) => {
+    if (e.buttons !== 1) return;
+    try {
+      await invoke('window_start_dragging');
+    } catch {
+      // Browser fallback
+    }
+  };
+
   const handleWindowClose = async () => {
     try {
       await invoke('window_close');
@@ -72,6 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header
       className="top-header"
       data-tauri-drag-region
+      onMouseDown={handleStartDragging}
       style={{
         height: '42px',
         padding: '0 12px',
